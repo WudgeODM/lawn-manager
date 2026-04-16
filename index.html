@@ -4,729 +4,374 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Lawn Manager">
 <title>Lawn Manager</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root {
-    --green: #1a6b3c;
-    --green-mid: #2e8b57;
-    --green-light: #d6efe0;
-    --green-pale: #f0faf4;
-    --text: #111;
-    --text-muted: #666;
-    --text-faint: #999;
-    --border: #e0e0e0;
-    --bg: #fff;
-    --bg2: #f7f7f7;
-    --bg3: #f0f0f0;
-    --red: #c0392b;
-    --red-bg: #fdecea;
-    --amber: #b45309;
-    --amber-bg: #fef3c7;
-    --radius: 10px;
-    --radius-sm: 6px;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --green: #4ade80;
-      --green-mid: #34d399;
-      --green-light: #052e16;
-      --green-pale: #022c1a;
-      --text: #f0f0f0;
-      --text-muted: #aaa;
-      --text-faint: #666;
-      --border: #333;
-      --bg: #1a1a1a;
-      --bg2: #222;
-      --bg3: #2a2a2a;
-      --red: #f87171;
-      --red-bg: #3b0f0f;
-      --amber: #fbbf24;
-      --amber-bg: #3b2300;
-    }
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; color: var(--text); background: var(--bg); }
-  
-  /* NAV */
-  .topbar { background: var(--green); color: #fff; padding: 14px 16px 0; position: sticky; top: 0; z-index: 100; }
-  .topbar-title { font-size: 17px; font-weight: 600; margin-bottom: 12px; }
-  .topbar-sub { font-size: 12px; opacity: 0.75; margin-top: -10px; margin-bottom: 10px; }
-  .tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
-  .tabs::-webkit-scrollbar { display: none; }
-  .tab { padding: 8px 14px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.65); background: none; border: none; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.15s; }
-  .tab.active { color: #fff; border-bottom-color: #fff; }
-
-  /* CONTENT */
-  .page { display: none; padding: 16px; max-width: 900px; margin: 0 auto; }
-  .page.active { display: block; }
-
-  /* CARDS */
-  .card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
-  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
-
-  /* METRICS */
-  .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
-  .metrics-grid.three { grid-template-columns: repeat(3, 1fr); }
-  .metric { background: var(--bg2); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
-  .metric-val { font-size: 22px; font-weight: 700; color: var(--green); margin-top: 4px; }
-  .metric-lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-
-  /* FORM */
-  .field { margin-bottom: 12px; }
-  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
-  .field input, .field select, .field textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; background: var(--bg); color: var(--text); outline: none; }
-  .field input:focus, .field select:focus { border-color: var(--green); }
-  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-  /* BUTTONS */
-  .btn { padding: 10px 16px; font-size: 14px; font-weight: 500; border-radius: var(--radius-sm); border: none; cursor: pointer; transition: opacity 0.15s; display: inline-flex; align-items: center; gap: 6px; }
-  .btn-primary { background: var(--green); color: #fff; }
-  .btn-secondary { background: var(--bg3); color: var(--text); }
-  .btn-danger { background: var(--red-bg); color: var(--red); }
-  .btn-success { background: var(--green-light); color: var(--green); }
-  .btn-amber { background: var(--amber-bg); color: var(--amber); }
-  .btn:active { opacity: 0.75; }
-  .btn-sm { padding: 6px 10px; font-size: 12px; }
-  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-
-  /* LIST ITEMS */
-  .list-item { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px; background: var(--bg); }
-  .list-item-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-  .list-item-name { font-weight: 600; font-size: 15px; }
-  .list-item-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-  .list-item-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-
-  /* BADGES */
-  .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-  .badge-green { background: var(--green-light); color: var(--green); }
-  .badge-amber { background: var(--amber-bg); color: var(--amber); }
-  .badge-red { background: var(--red-bg); color: var(--red); }
-  .badge-gray { background: var(--bg3); color: var(--text-muted); }
-
-  /* SECTION HEADER */
-  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-  .section-title { font-size: 16px; font-weight: 600; }
-
-  /* EMPTY */
-  .empty { text-align: center; padding: 32px 16px; color: var(--text-faint); font-size: 14px; }
-  .empty-icon { font-size: 36px; margin-bottom: 8px; }
-
-  /* DIVIDER */
-  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-
-  /* COLLAPSIBLE FORM */
-  .form-wrap { display: none; margin-bottom: 16px; }
-  .form-wrap.open { display: block; }
-
-  /* PRICE TAG */
-  .price-tag { font-size: 16px; font-weight: 700; color: var(--green); }
-
-  /* UPCOMING ITEM */
-  .upcoming { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .upcoming:last-child { border: none; }
-
-  /* EXPORT/IMPORT */
-  .export-box { background: var(--bg2); border-radius: var(--radius-sm); padding: 12px; font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
-
-  /* SNACKBAR */
-  #snack { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 999; }
-  #snack.show { opacity: 1; }
-
-  @media (min-width: 600px) {
-    .metrics-grid { grid-template-columns: repeat(4, 1fr); }
-    .metrics-grid.three { grid-template-columns: repeat(3, 1fr); }
-  }
+:root{--green:#1a6b3c;--green-mid:#2e8b57;--green-light:#d6efe0;--green-pale:#f0faf4;--text:#111;--text-muted:#666;--text-faint:#bbb;--border:#e0e0e0;--bg:#fff;--bg2:#f7f7f7;--bg3:#efefef;--red:#c0392b;--red-bg:#fdecea;--amber:#b45309;--amber-bg:#fef3c7;--blue:#1e40af;--blue-bg:#eff6ff;--radius:12px;--rsm:7px}
+@media(prefers-color-scheme:dark){:root{--green:#4ade80;--green-mid:#34d399;--green-light:#052e16;--green-pale:#021f10;--text:#f0f0f0;--text-muted:#aaa;--text-faint:#555;--border:#2a2a2a;--bg:#141414;--bg2:#1e1e1e;--bg3:#282828;--red:#f87171;--red-bg:#2d0f0f;--amber:#fbbf24;--amber-bg:#2d1a00;--blue:#93c5fd;--blue-bg:#1e2d4a}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:var(--text);background:var(--bg);min-height:100vh}
+#lock-screen{position:fixed;inset:0;background:var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:32px 24px}
+#lock-screen.hidden{display:none}
+.lock-logo{font-size:48px;margin-bottom:8px}
+.lock-title{color:#fff;font-size:22px;font-weight:700;margin-bottom:4px}
+.lock-sub{color:rgba(255,255,255,0.65);font-size:14px;margin-bottom:36px;text-align:center}
+.pin-dots{display:flex;gap:14px;margin-bottom:28px}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.5);background:transparent;transition:background 0.15s}
+.pin-dot.filled{background:#fff;border-color:#fff}
+.pin-pad{display:grid;grid-template-columns:repeat(3,70px);gap:12px;margin-bottom:20px}
+.pin-key{width:70px;height:70px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff;font-size:22px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.1s;-webkit-tap-highlight-color:transparent}
+.pin-key:active{background:rgba(255,255,255,0.3);transform:scale(0.93)}
+#bio-btn{background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.4);color:#fff;padding:12px 28px;border-radius:30px;font-size:15px;cursor:pointer;display:none;align-items:center;gap:8px;margin-top:4px}
+#bio-btn.show{display:flex}
+#lock-msg{color:rgba(255,255,255,0.8);font-size:13px;margin-top:12px;min-height:20px;text-align:center}
+.setup-form{width:100%;max-width:320px}
+.setup-label{color:rgba(255,255,255,0.8);font-size:13px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:8px}
+.setup-input{width:100%;padding:12px 16px;border-radius:var(--rsm);border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;font-size:18px;text-align:center;letter-spacing:4px;outline:none;margin-bottom:16px}
+.setup-input::placeholder{color:rgba(255,255,255,0.4);letter-spacing:0}
+.setup-btn{width:100%;padding:14px;border-radius:var(--rsm);border:none;background:#fff;color:var(--green);font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.topbar{background:var(--green);color:#fff;padding:14px 16px 0;position:sticky;top:0;z-index:100}
+.topbar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.topbar-title{font-size:17px;font-weight:700}
+.xl-btn{background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:8px 13px;font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);background:none;border:none;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all 0.15s}
+.tab.active{color:#fff;border-bottom-color:#fff}
+.page{display:none;padding:14px;max-width:900px;margin:0 auto}
+.page.active{display:block}
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:700;margin-bottom:12px}
+.mg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.mg3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.mg4{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+@media(min-width:540px){.mg4{grid-template-columns:repeat(4,1fr)}}
+.metric{background:var(--bg2);border-radius:var(--rsm);padding:12px;text-align:center}
+.metric-val{font-size:20px;font-weight:800;color:var(--green);margin-top:3px}
+.metric-lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em}
+.field input,.field select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--rsm);font-size:15px;background:var(--bg);color:var(--text);outline:none}
+.field input:focus,.field select:focus{border-color:var(--green)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{padding:9px 15px;font-size:13px;font-weight:600;border-radius:var(--rsm);border:none;cursor:pointer;transition:opacity 0.15s;display:inline-flex;align-items:center;gap:5px}
+.btn:active{opacity:0.7}
+.bp{background:var(--green);color:#fff}
+.bs{background:var(--bg3);color:var(--text)}
+.bd{background:var(--red-bg);color:var(--red)}
+.bsuc{background:var(--green-light);color:var(--green)}
+.bamb{background:var(--amber-bg);color:var(--amber)}
+.bbl{background:var(--blue-bg);color:var(--blue)}
+.bsm{padding:5px 10px;font-size:11px}
+.br{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.li{border:1px solid var(--border);border-radius:var(--rsm);padding:12px 14px;margin-bottom:8px;background:var(--bg)}
+.li-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.li-name{font-weight:700;font-size:15px}
+.li-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.li-act{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.bg-badge{background:var(--green-light);color:var(--green)}
+.ba-badge{background:var(--amber-bg);color:var(--amber)}
+.br-badge{background:var(--red-bg);color:var(--red)}
+.bgr-badge{background:var(--bg3);color:var(--text-muted)}
+.bb-badge{background:var(--blue-bg);color:var(--blue)}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.st{font-size:16px;font-weight:700}
+.empty{text-align:center;padding:28px 16px;color:var(--text-faint);font-size:14px}
+.empty-icon{font-size:34px;margin-bottom:6px}
+.fw{display:none;margin-bottom:14px}
+.fw.open{display:block}
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+.upcoming{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.upcoming:last-child{border:none}
+.price-tag{font-size:15px;font-weight:800;color:var(--green)}
+#snack{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 22px;border-radius:24px;font-size:13px;opacity:0;pointer-events:none;transition:opacity 0.2s;z-index:1000;white-space:nowrap}
+#snack.show{opacity:1}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-title">🌿 Lawn Manager</div>
-  <div class="topbar-sub" id="today-date"></div>
-  <div class="tabs">
-    <button class="tab active" onclick="showPage('dashboard',this)">Dashboard</button>
-    <button class="tab" onclick="showPage('clients',this)">Clients</button>
-    <button class="tab" onclick="showPage('schedule',this)">Schedule</button>
-    <button class="tab" onclick="showPage('finance',this)">Finance</button>
-    <button class="tab" onclick="showPage('invoices',this)">Invoices</button>
-    <button class="tab" onclick="showPage('settings',this)">Settings</button>
+<div id="lock-screen">
+  <div id="lock-setup" style="width:100%;max-width:320px;display:none;flex-direction:column;align-items:center">
+    <div class="lock-logo">🌿</div>
+    <div class="lock-title">Lawn Manager</div>
+    <div class="lock-sub">Set a PIN to protect your data</div>
+    <div class="setup-form">
+      <div class="setup-label">Choose a 4-digit PIN</div>
+      <input class="setup-input" id="setup-pin1" type="password" inputmode="numeric" maxlength="4" placeholder="····" oninput="setupNext()">
+      <div class="setup-label">Confirm PIN</div>
+      <input class="setup-input" id="setup-pin2" type="password" inputmode="numeric" maxlength="4" placeholder="····" oninput="setupCheck()">
+      <button class="setup-btn" id="setup-save-btn" onclick="savePin()" style="opacity:0.4;pointer-events:none">Set PIN &amp; Enter</button>
+      <div id="setup-msg" style="color:rgba(255,255,255,0.7);font-size:13px;text-align:center;min-height:18px"></div>
+    </div>
+  </div>
+  <div id="lock-entry" style="display:none;flex-direction:column;align-items:center">
+    <div class="lock-logo">🌿</div>
+    <div class="lock-title">Lawn Manager</div>
+    <div class="lock-sub">Enter your PIN</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinKey('1')">1</button>
+      <button class="pin-key" onclick="pinKey('2')">2</button>
+      <button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button>
+      <button class="pin-key" onclick="pinKey('5')">5</button>
+      <button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button>
+      <button class="pin-key" onclick="pinKey('8')">8</button>
+      <button class="pin-key" onclick="pinKey('9')">9</button>
+      <button class="pin-key" onclick="pinKey('0')" style="grid-column:2">0</button>
+      <button class="pin-key" onclick="pinDel()">&#9003;</button>
+    </div>
+    <button id="bio-btn" onclick="bioAuth()">&#128275; Use biometrics</button>
+    <div id="lock-msg"></div>
   </div>
 </div>
 
-<!-- DASHBOARD -->
-<div class="page active" id="page-dashboard">
-  <div class="metrics-grid" style="margin-top:14px">
-    <div class="metric"><div class="metric-lbl">Clients</div><div class="metric-val" id="d-clients">0</div></div>
-    <div class="metric"><div class="metric-lbl">Jobs this month</div><div class="metric-val" id="d-jobs">0</div></div>
-    <div class="metric"><div class="metric-lbl">Income this month</div><div class="metric-val" id="d-income">R0</div></div>
-    <div class="metric"><div class="metric-lbl">Outstanding</div><div class="metric-val" id="d-outstanding">R0</div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Upcoming jobs</div>
-    <div id="d-upcoming"><div class="empty"><div class="empty-icon">📋</div>No jobs scheduled</div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">This month at a glance</div>
-    <div class="metrics-grid three">
-      <div class="metric"><div class="metric-lbl">Income</div><div class="metric-val" id="d-mo-income">R0</div></div>
-      <div class="metric"><div class="metric-lbl">Expenses</div><div class="metric-val" id="d-mo-exp" style="color:var(--red)">R0</div></div>
-      <div class="metric"><div class="metric-lbl">Profit</div><div class="metric-val" id="d-mo-profit">R0</div></div>
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div class="topbar-title" id="app-title">🌿 Lawn Manager</div>
+      <button class="xl-btn" onclick="downloadExcel()">📊 Excel</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="showPage('dashboard',this)">Dashboard</button>
+      <button class="tab" onclick="showPage('clients',this)">Clients</button>
+      <button class="tab" onclick="showPage('schedule',this)">Schedule</button>
+      <button class="tab" onclick="showPage('finance',this)">Finance</button>
+      <button class="tab" onclick="showPage('invoices',this)">Invoices</button>
+      <button class="tab" onclick="showPage('settings',this)">Settings</button>
     </div>
   </div>
-</div>
 
-<!-- CLIENTS -->
-<div class="page" id="page-clients">
-  <div class="section-header" style="margin-top:14px">
-    <div class="section-title">Clients</div>
-    <button class="btn btn-primary btn-sm" onclick="toggleForm('client-form')">+ Add client</button>
-  </div>
-
-  <div class="form-wrap card" id="client-form">
-    <div class="card-title">New client</div>
-    <div class="field"><label>Name</label><input id="c-name" placeholder="e.g. Mrs Smith"></div>
-    <div class="field-row">
-      <div class="field"><label>Unit / address</label><input id="c-addr" placeholder="e.g. Unit 12"></div>
-      <div class="field"><label>Phone</label><input id="c-phone" placeholder="082 000 0000"></div>
+  <div class="page active" id="page-dashboard" style="padding-top:14px">
+    <div class="mg4">
+      <div class="metric"><div class="metric-lbl">Clients</div><div class="metric-val" id="d-clients">0</div></div>
+      <div class="metric"><div class="metric-lbl">Jobs this month</div><div class="metric-val" id="d-jobs">0</div></div>
+      <div class="metric"><div class="metric-lbl">Income this month</div><div class="metric-val" id="d-income">R0</div></div>
+      <div class="metric"><div class="metric-lbl">Awaiting payment</div><div class="metric-val" id="d-awaiting" style="color:var(--amber)">R0</div></div>
     </div>
-    <div class="field-row">
-      <div class="field"><label>Price per mow (R)</label><input id="c-price" type="number" placeholder="150"></div>
-      <div class="field"><label>Frequency</label>
-        <select id="c-freq">
-          <option value="weekly">Weekly</option>
-          <option value="biweekly" selected>Every 2 weeks</option>
-          <option value="monthly">Monthly</option>
-          <option value="adhoc">Ad hoc</option>
-        </select>
+    <div class="card">
+      <div class="card-title">This month</div>
+      <div class="mg3" style="margin-bottom:0">
+        <div class="metric"><div class="metric-lbl">Income received</div><div class="metric-val" id="d-mo-in">R0</div></div>
+        <div class="metric"><div class="metric-lbl">Expenses</div><div class="metric-val" id="d-mo-ex" style="color:var(--red)">R0</div></div>
+        <div class="metric"><div class="metric-lbl">Profit</div><div class="metric-val" id="d-mo-pr">R0</div></div>
       </div>
     </div>
-    <div class="field"><label>Notes (gate code, dog, etc.)</label><input id="c-notes" placeholder="Optional"></div>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="saveClient()">Save client</button>
-      <button class="btn btn-secondary" onclick="toggleForm('client-form')">Cancel</button>
+    <div class="card"><div class="card-title">Upcoming jobs</div><div id="d-upcoming"><div class="empty"><div class="empty-icon">📋</div>No upcoming jobs</div></div></div>
+    <div class="card"><div class="card-title">Awaiting payment</div><div id="d-await-list"><div class="empty"><div class="empty-icon">✅</div>All paid up</div></div></div>
+  </div>
+
+  <div class="page" id="page-clients" style="padding-top:14px">
+    <div class="sh"><div class="st">Clients</div><button class="btn bp bsm" onclick="toggleForm('cf')">+ Add client</button></div>
+    <div class="fw card" id="cf">
+      <div class="card-title">New client</div>
+      <div class="field"><label>Name</label><input id="c-name" placeholder="e.g. Mrs Smith"></div>
+      <div class="fr">
+        <div class="field"><label>Unit / address</label><input id="c-addr" placeholder="e.g. Unit 12"></div>
+        <div class="field"><label>Phone</label><input id="c-phone" placeholder="082 000 0000"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Price per mow (R)</label><input id="c-price" type="number" placeholder="150"></div>
+        <div class="field"><label>Frequency</label>
+          <select id="c-freq"><option value="weekly">Weekly</option><option value="biweekly" selected>Every 2 weeks</option><option value="monthly">Monthly</option><option value="adhoc">Ad hoc</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Notes</label><input id="c-notes" placeholder="Gate code, dog, etc."></div>
+      <div class="br"><button class="btn bp" onclick="saveClient()">Save client</button><button class="btn bs" onclick="toggleForm('cf')">Cancel</button></div>
     </div>
+    <div id="clients-list"></div>
   </div>
 
-  <div id="clients-list"></div>
-</div>
-
-<!-- SCHEDULE -->
-<div class="page" id="page-schedule">
-  <div class="section-header" style="margin-top:14px">
-    <div class="section-title">Schedule</div>
-    <button class="btn btn-primary btn-sm" onclick="toggleForm('job-form')">+ Add job</button>
-  </div>
-
-  <div class="form-wrap card" id="job-form">
-    <div class="card-title">Schedule a job</div>
-    <div class="field"><label>Client</label><select id="j-client"></select></div>
-    <div class="field"><label>Date</label><input id="j-date" type="date"></div>
-    <div class="field"><label>Notes</label><input id="j-notes" placeholder="Optional"></div>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="saveJob()">Save job</button>
-      <button class="btn btn-secondary" onclick="toggleForm('job-form')">Cancel</button>
+  <div class="page" id="page-schedule" style="padding-top:14px">
+    <div class="sh"><div class="st">Schedule</div><button class="btn bp bsm" onclick="toggleForm('jf')">+ Schedule job</button></div>
+    <div class="fw card" id="jf">
+      <div class="card-title">New job</div>
+      <div class="field"><label>Client</label><select id="j-client"></select></div>
+      <div class="fr">
+        <div class="field"><label>Date</label><input id="j-date" type="date"></div>
+        <div class="field"><label>Notes</label><input id="j-notes" placeholder="Optional"></div>
+      </div>
+      <div class="br"><button class="btn bp" onclick="saveJob()">Save job</button><button class="btn bs" onclick="toggleForm('jf')">Cancel</button></div>
     </div>
-  </div>
-
-  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-    <button class="btn btn-sm btn-secondary" onclick="setJobFilter('all')" id="jf-all">All</button>
-    <button class="btn btn-sm btn-amber" onclick="setJobFilter('scheduled')" id="jf-scheduled">Scheduled</button>
-    <button class="btn btn-sm btn-success" onclick="setJobFilter('done')" id="jf-done">Done</button>
-    <button class="btn btn-sm btn-secondary" onclick="setJobFilter('cancelled')" id="jf-cancelled">Cancelled</button>
-  </div>
-
-  <div id="jobs-list"></div>
-</div>
-
-<!-- FINANCE -->
-<div class="page" id="page-finance">
-  <div class="metrics-grid three" style="margin-top:14px">
-    <div class="metric"><div class="metric-lbl">Total income</div><div class="metric-val" id="f-income">R0</div></div>
-    <div class="metric"><div class="metric-lbl">Total expenses</div><div class="metric-val" id="f-exp" style="color:var(--red)">R0</div></div>
-    <div class="metric"><div class="metric-lbl">Net profit</div><div class="metric-val" id="f-profit">R0</div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Log expense</div>
-    <div class="field-row">
-      <div class="field"><label>Date</label><input id="e-date" type="date"></div>
-      <div class="field"><label>Amount (R)</label><input id="e-amt" type="number" placeholder="0"></div>
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="btn bs bsm" onclick="setFilter('all')">All</button>
+      <button class="btn bamb bsm" onclick="setFilter('scheduled')">Scheduled</button>
+      <button class="btn bs bsm" onclick="setFilter('done')">Done</button>
+      <button class="btn bbl bsm" onclick="setFilter('unpaid')">Awaiting payment</button>
+      <button class="btn bsuc bsm" onclick="setFilter('paid')">Paid</button>
     </div>
-    <div class="field"><label>Description</label><input id="e-desc" placeholder="e.g. Fuel for ride-on"></div>
-    <button class="btn btn-primary" onclick="saveExpense()">Add expense</button>
+    <div id="jobs-list"></div>
   </div>
 
-  <div class="section-header">
-    <div class="section-title">Transaction log</div>
-  </div>
-  <div id="finance-list"></div>
-</div>
-
-<!-- INVOICES -->
-<div class="page" id="page-invoices">
-  <div class="section-header" style="margin-top:14px">
-    <div class="section-title">Invoices</div>
-    <button class="btn btn-primary btn-sm" onclick="toggleForm('invoice-form')">+ Create</button>
-  </div>
-
-  <div class="form-wrap card" id="invoice-form">
-    <div class="card-title">New invoice</div>
-    <div class="field"><label>Client</label><select id="i-client" onchange="prefillInvoice()"></select></div>
-    <div class="field"><label>Description</label><input id="i-desc" placeholder="e.g. 2x lawn mows — April"></div>
-    <div class="field-row">
-      <div class="field"><label>Amount (R)</label><input id="i-amt" type="number" placeholder="0"></div>
-      <div class="field"><label>Due date</label><input id="i-due" type="date"></div>
+  <div class="page" id="page-finance" style="padding-top:14px">
+    <div class="mg3">
+      <div class="metric"><div class="metric-lbl">Total income received</div><div class="metric-val" id="f-in">R0</div></div>
+      <div class="metric"><div class="metric-lbl">Total expenses</div><div class="metric-val" id="f-ex" style="color:var(--red)">R0</div></div>
+      <div class="metric"><div class="metric-lbl">Net profit</div><div class="metric-val" id="f-pr">R0</div></div>
     </div>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="saveInvoice()">Create invoice</button>
-      <button class="btn btn-secondary" onclick="toggleForm('invoice-form')">Cancel</button>
+    <div class="mg2">
+      <div class="metric"><div class="metric-lbl">Pending (unpaid jobs)</div><div class="metric-val" id="f-pending" style="color:var(--amber)">R0</div></div>
+      <div class="metric"><div class="metric-lbl">Outstanding invoices</div><div class="metric-val" id="f-inv-out" style="color:var(--amber)">R0</div></div>
     </div>
-  </div>
-
-  <div id="invoices-list"></div>
-</div>
-
-<!-- SETTINGS -->
-<div class="page" id="page-settings">
-  <div style="margin-top:14px">
-  <div class="card">
-    <div class="card-title">Business details</div>
-    <div class="field"><label>Business name</label><input id="s-bname" placeholder="e.g. Oli's Lawn Service"></div>
-    <div class="field"><label>Your name</label><input id="s-name" placeholder="e.g. Oli Mowat"></div>
-    <div class="field"><label>Phone</label><input id="s-phone" placeholder="Your number"></div>
-    <div class="field"><label>Complex name</label><input id="s-complex" placeholder="e.g. Kearsney Estate"></div>
-    <button class="btn btn-primary" onclick="saveSettings()">Save</button>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Export & import data</div>
-    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Export your data to transfer between devices or as a backup.</p>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="exportData()">📤 Export data</button>
-      <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">📥 Import data</button>
+    <div class="card">
+      <div class="card-title">Log expense</div>
+      <div class="fr">
+        <div class="field"><label>Date</label><input id="e-date" type="date"></div>
+        <div class="field"><label>Amount (R)</label><input id="e-amt" type="number" placeholder="0"></div>
+      </div>
+      <div class="field"><label>Description</label><input id="e-desc" placeholder="e.g. Fuel, blade sharpening"></div>
+      <button class="btn bp" onclick="saveExpense()">Add expense</button>
     </div>
-    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+    <div class="sh"><div class="st">Transactions</div></div>
+    <div id="finance-list"></div>
   </div>
 
-  <div class="card">
-    <div class="card-title" style="color:var(--red)">Danger zone</div>
-    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">This will permanently delete all your data.</p>
-    <button class="btn btn-danger" onclick="clearAllData()">🗑 Clear all data</button>
+  <div class="page" id="page-invoices" style="padding-top:14px">
+    <div class="sh"><div class="st">Invoices</div><button class="btn bp bsm" onclick="toggleForm('ivf')">+ Create</button></div>
+    <div class="fw card" id="ivf">
+      <div class="card-title">New invoice</div>
+      <div class="field"><label>Client</label><select id="i-client" onchange="prefillInv()"></select></div>
+      <div class="field"><label>Description</label><input id="i-desc" placeholder="e.g. 2x lawn mows April"></div>
+      <div class="fr">
+        <div class="field"><label>Amount (R)</label><input id="i-amt" type="number" placeholder="0"></div>
+        <div class="field"><label>Due date</label><input id="i-due" type="date"></div>
+      </div>
+      <div class="br"><button class="btn bp" onclick="saveInvoice()">Create</button><button class="btn bs" onclick="toggleForm('ivf')">Cancel</button></div>
+    </div>
+    <div id="invoices-list"></div>
   </div>
+
+  <div class="page" id="page-settings" style="padding-top:14px">
+    <div class="card">
+      <div class="card-title">Business details</div>
+      <div class="field"><label>Business name</label><input id="s-bname" placeholder="Oli's Lawn Service"></div>
+      <div class="fr">
+        <div class="field"><label>Your name</label><input id="s-name" placeholder="Oli Mowat"></div>
+        <div class="field"><label>Phone</label><input id="s-phone" placeholder="Your number"></div>
+      </div>
+      <div class="field"><label>Complex</label><input id="s-complex" placeholder="e.g. Kearsney Estate"></div>
+      <button class="btn bp" onclick="saveSettings()">Save details</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Security</div>
+      <div class="fr" style="margin-bottom:10px">
+        <div class="field"><label>New PIN</label><input id="ch-pin1" type="password" inputmode="numeric" maxlength="4" placeholder="····"></div>
+        <div class="field"><label>Confirm PIN</label><input id="ch-pin2" type="password" inputmode="numeric" maxlength="4" placeholder="····"></div>
+      </div>
+      <div class="br">
+        <button class="btn bp" onclick="changePin()">Change PIN</button>
+        <button class="btn bs" id="bio-setup-btn" onclick="setupBio()" style="display:none">Set up biometrics</button>
+      </div>
+      <div id="bio-status" style="font-size:12px;color:var(--text-muted);margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Data &amp; sync</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Export a JSON backup to transfer data between devices. Download Excel any time for spreadsheet analysis.</p>
+      <div class="br">
+        <button class="btn bs" onclick="exportJSON()">📤 Export backup</button>
+        <button class="btn bs" onclick="document.getElementById('imp').click()">📥 Import backup</button>
+        <button class="btn bp" onclick="downloadExcel()">📊 Download Excel</button>
+      </div>
+      <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(event)">
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--red)">Danger zone</div>
+      <button class="btn bd" onclick="clearData()">🗑 Clear all data</button>
+    </div>
+    <div style="text-align:center;padding:16px 0">
+      <button class="btn bs" onclick="lockApp()">🔒 Lock app</button>
+    </div>
   </div>
 </div>
 
 <div id="snack"></div>
 
 <script>
-const STORAGE_KEY = 'lawn_mgr_v2';
-let state = { clients:[], jobs:[], expenses:[], incomes:[], invoices:[], nextInv:1, settings:{} };
-let jobFilter = 'all';
+const SK='lawn_v3',AK='lawn_auth';
+let S={clients:[],jobs:[],expenses:[],incomes:[],invoices:[],nextInv:1,settings:{}};
+let jobFilter='all',pinBuffer='';
 
-function load() {
-  try { const d = localStorage.getItem(STORAGE_KEY); if(d) state = JSON.parse(d); } catch(e){}
-  if(!state.incomes) state.incomes = [];
-  if(!state.settings) state.settings = {};
-  applySettings();
-  renderAll();
-}
+function load(){try{const d=localStorage.getItem(SK);if(d)S=JSON.parse(d);}catch(e){}if(!S.incomes)S.incomes=[];if(!S.settings)S.settings={};}
+function save(){localStorage.setItem(SK,JSON.stringify(S));}
+function today(){return new Date().toISOString().split('T')[0];}
+function rand(){return Date.now()+''+Math.floor(Math.random()*9999);}
+function fmtDate(d){if(!d)return'—';const[y,m,dy]=d.split('-');return`${parseInt(dy)} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1]} ${y}`;}
+function snack(msg){const el=document.getElementById('snack');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400);}
+function getAuth(){try{return JSON.parse(localStorage.getItem(AK)||'{}');}catch(e){return{};}}
+function setAuth(o){localStorage.setItem(AK,JSON.stringify(o));}
 
-function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
+async function hashPin(p){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p+'lawn_salt_25'));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
 
-function snack(msg) {
-  const el = document.getElementById('snack');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2200);
-}
+function initLock(){const a=getAuth();if(!a.pinHash){document.getElementById('lock-setup').style.display='flex';}else{document.getElementById('lock-entry').style.display='flex';checkBioAvail();}}
 
-function applySettings() {
-  const s = state.settings;
-  if(s.bname) document.getElementById('s-bname').value = s.bname;
-  if(s.name) document.getElementById('s-name').value = s.name;
-  if(s.phone) document.getElementById('s-phone').value = s.phone;
-  if(s.complex) document.getElementById('s-complex').value = s.complex;
-  const title = s.bname || 'Lawn Manager';
-  document.querySelector('.topbar-title').textContent = '🌿 ' + title;
-  document.title = title;
-}
+function setupNext(){const v=document.getElementById('setup-pin1').value;if(v.length===4)document.getElementById('setup-pin2').focus();}
+function setupCheck(){const p1=document.getElementById('setup-pin1').value,p2=document.getElementById('setup-pin2').value,btn=document.getElementById('setup-save-btn'),msg=document.getElementById('setup-msg');if(p2.length===4){if(p1===p2){btn.style.opacity='1';btn.style.pointerEvents='auto';msg.textContent='PINs match ✓';}else{btn.style.opacity='0.4';btn.style.pointerEvents='none';msg.textContent='PINs do not match';}}else{btn.style.opacity='0.4';btn.style.pointerEvents='none';msg.textContent='';}}
+async function savePin(){const pin=document.getElementById('setup-pin1').value;if(pin.length!==4){snack('Enter a 4-digit PIN');return;}setAuth({pinHash:await hashPin(pin)});unlock();}
 
-function saveSettings() {
-  state.settings = {
-    bname: document.getElementById('s-bname').value.trim(),
-    name: document.getElementById('s-name').value.trim(),
-    phone: document.getElementById('s-phone').value.trim(),
-    complex: document.getElementById('s-complex').value.trim()
-  };
-  save(); applySettings(); snack('Settings saved');
-}
+function pinKey(k){if(pinBuffer.length>=4)return;pinBuffer+=k;updateDots();if(pinBuffer.length===4)setTimeout(checkPin,120);}
+function pinDel(){pinBuffer=pinBuffer.slice(0,-1);updateDots();document.getElementById('lock-msg').textContent='';}
+function updateDots(){for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.toggle('filled',i<pinBuffer.length);}
+async function checkPin(){const a=getAuth(),h=await hashPin(pinBuffer);if(h===a.pinHash){unlock();}else{document.getElementById('lock-msg').textContent='Wrong PIN, try again';pinBuffer='';updateDots();setTimeout(()=>document.getElementById('lock-msg').textContent='',2000);}}
 
-function showPage(id, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  btn.classList.add('active');
-  if(id === 'schedule') populateSelect('j-client');
-  if(id === 'invoices') populateSelect('i-client');
-  if(id === 'finance') { const t = today(); document.getElementById('e-date').value = t; }
-}
+async function checkBioAvail(){const a=getAuth();try{if(!window.PublicKeyCredential)return;const av=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();if(av&&a.credId)document.getElementById('bio-btn').classList.add('show');const sb=document.getElementById('bio-setup-btn');const bs=document.getElementById('bio-status');if(av&&sb){sb.style.display='inline-flex';if(bs)bs.textContent=a.credId?'✓ Biometrics enrolled':'Biometrics available — tap to enrol';}}catch(e){}}
 
-function toggleForm(id) {
-  const el = document.getElementById(id);
-  el.classList.toggle('open');
-  if(id === 'job-form' && el.classList.contains('open')) {
-    populateSelect('j-client');
-    document.getElementById('j-date').value = today();
-  }
-  if(id === 'invoice-form' && el.classList.contains('open')) {
-    populateSelect('i-client');
-    const due = new Date(); due.setDate(due.getDate()+14);
-    document.getElementById('i-due').value = due.toISOString().split('T')[0];
-    prefillInvoice();
-  }
-}
+async function setupBio(){try{const cred=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'Lawn Manager',id:location.hostname||'localhost'},user:{id:new TextEncoder().encode('oli'),name:'oli',displayName:'Oli'},pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},timeout:60000}});const a=getAuth();a.credId=Array.from(new Uint8Array(cred.rawId));setAuth(a);snack('Biometrics enrolled ✓');const bs=document.getElementById('bio-status');if(bs)bs.textContent='✓ Biometrics enrolled';}catch(e){if(e.name!=='NotAllowedError')snack('Biometrics failed: '+e.message);}}
 
-function populateSelect(id) {
-  const sel = document.getElementById(id);
-  sel.innerHTML = state.clients.length
-    ? state.clients.map(c => `<option value="${c.id}">${c.name} — ${c.addr}</option>`).join('')
-    : '<option value="">No clients added yet</option>';
-}
+async function bioAuth(){const a=getAuth();if(!a.credId){snack('No biometrics enrolled');return;}try{await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{id:new Uint8Array(a.credId).buffer,type:'public-key'}],userVerification:'required',timeout:60000}});unlock();}catch(e){if(e.name!=='NotAllowedError')snack('Biometric failed');}}
 
-function today() { return new Date().toISOString().split('T')[0]; }
+function unlock(){load();document.getElementById('lock-screen').classList.add('hidden');document.getElementById('app').style.display='block';applySettings();renderAll();checkBioAvail();pinBuffer='';updateDots();}
+function lockApp(){document.getElementById('lock-screen').classList.remove('hidden');document.getElementById('lock-entry').style.display='flex';document.getElementById('lock-setup').style.display='none';document.getElementById('app').style.display='none';pinBuffer='';updateDots();document.getElementById('lock-msg').textContent='';checkBioAvail();}
+async function changePin(){const p1=document.getElementById('ch-pin1').value,p2=document.getElementById('ch-pin2').value;if(p1.length!==4||p2.length!==4){snack('Enter 4-digit PINs');return;}if(p1!==p2){snack('PINs do not match');return;}const a=getAuth();a.pinHash=await hashPin(p1);setAuth(a);document.getElementById('ch-pin1').value='';document.getElementById('ch-pin2').value='';snack('PIN changed ✓');}
 
-function formatDate(d) {
-  if(!d) return '—';
-  const [y,m,day] = d.split('-');
-  const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${parseInt(day)} ${mo[parseInt(m)-1]} ${y}`;
-}
+function showPage(id,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');btn.classList.add('active');if(id==='schedule')populateSel('j-client');if(id==='invoices')populateSel('i-client');if(id==='finance')document.getElementById('e-date').value=today();if(id==='settings'){applySettingsForm();checkBioAvail();}}
+function toggleForm(id){const el=document.getElementById(id);el.classList.toggle('open');if(id==='jf'&&el.classList.contains('open')){populateSel('j-client');document.getElementById('j-date').value=today();}if(id==='ivf'&&el.classList.contains('open')){populateSel('i-client');const d=new Date();d.setDate(d.getDate()+14);document.getElementById('i-due').value=d.toISOString().split('T')[0];prefillInv();}}
+function populateSel(id){const sel=document.getElementById(id);sel.innerHTML=S.clients.length?S.clients.map(c=>`<option value="${c.id}">${c.name} — ${c.addr}</option>`).join(''):'<option value="">No clients yet</option>';}
 
-function rand() { return Date.now() + Math.random(); }
+function applySettings(){const s=S.settings;const t='🌿 '+(s.bname||'Lawn Manager');document.getElementById('app-title').textContent=t;document.title=s.bname||'Lawn Manager';}
+function applySettingsForm(){const s=S.settings;['bname','name','phone','complex'].forEach(k=>{const el=document.getElementById('s-'+k);if(el&&s[k])el.value=s[k];});}
+function saveSettings(){S.settings={bname:document.getElementById('s-bname').value.trim(),name:document.getElementById('s-name').value.trim(),phone:document.getElementById('s-phone').value.trim(),complex:document.getElementById('s-complex').value.trim()};save();applySettings();snack('Settings saved ✓');}
 
-// ── CLIENTS ──
-function saveClient() {
-  const name = document.getElementById('c-name').value.trim();
-  const addr = document.getElementById('c-addr').value.trim();
-  if(!name || !addr) { snack('Name and address required'); return; }
-  state.clients.push({
-    id: '' + rand(), name, addr,
-    phone: document.getElementById('c-phone').value.trim(),
-    price: parseFloat(document.getElementById('c-price').value) || 0,
-    freq: document.getElementById('c-freq').value,
-    notes: document.getElementById('c-notes').value.trim()
-  });
-  ['c-name','c-addr','c-phone','c-price','c-notes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('c-freq').value = 'biweekly';
-  save(); renderAll(); toggleForm('client-form'); snack('Client added ✓');
-}
+const freqLbl={weekly:'Weekly',biweekly:'Every 2 wks',monthly:'Monthly',adhoc:'Ad hoc'};
+function saveClient(){const name=document.getElementById('c-name').value.trim(),addr=document.getElementById('c-addr').value.trim();if(!name||!addr){snack('Name and address required');return;}S.clients.push({id:rand(),name,addr,phone:document.getElementById('c-phone').value.trim(),price:parseFloat(document.getElementById('c-price').value)||0,freq:document.getElementById('c-freq').value,notes:document.getElementById('c-notes').value.trim()});['c-name','c-addr','c-phone','c-price','c-notes'].forEach(i=>document.getElementById(i).value='');document.getElementById('c-freq').value='biweekly';save();renderAll();toggleForm('cf');snack('Client added ✓');}
+function deleteClient(id){if(!confirm('Remove this client?'))return;S.clients=S.clients.filter(c=>c.id!==id);save();renderAll();}
+function renderClients(){const el=document.getElementById('clients-list');if(!S.clients.length){el.innerHTML='<div class="empty"><div class="empty-icon">👤</div>No clients yet</div>';return;}el.innerHTML=S.clients.map(c=>`<div class="li"><div class="li-top"><div><div class="li-name">${c.name}</div><div class="li-sub">${c.addr}${c.phone?' · '+c.phone:''}</div>${c.notes?`<div class="li-sub">📝 ${c.notes}</div>`:''}</div><div style="text-align:right"><div class="price-tag">R${c.price.toFixed(0)}</div><div style="font-size:11px;color:var(--text-muted)">${freqLbl[c.freq]||c.freq}</div></div></div><div class="li-act"><button class="btn bp bsm" onclick="quickSchedule('${c.id}')">+ Schedule</button><button class="btn bd bsm" onclick="deleteClient('${c.id}')">Remove</button></div></div>`).join('');}
+function quickSchedule(cid){showPage('schedule',document.querySelectorAll('.tab')[2]);setTimeout(()=>{toggleForm('jf');document.getElementById('j-client').value=cid;},80);}
 
-function deleteClient(id) {
-  if(!confirm('Remove this client?')) return;
-  state.clients = state.clients.filter(c => c.id !== id);
-  save(); renderAll();
-}
+function saveJob(){const cid=document.getElementById('j-client').value,date=document.getElementById('j-date').value;if(!cid||!date){snack('Select client and date');return;}const c=S.clients.find(x=>x.id===cid);S.jobs.push({id:rand(),clientId:cid,clientName:c.name,clientAddr:c.addr,price:c.price,date,notes:document.getElementById('j-notes').value.trim(),status:'scheduled',paymentStatus:'unpaid',paidDate:null});document.getElementById('j-notes').value='';save();renderAll();toggleForm('jf');snack('Job scheduled ✓');}
+function markDone(id){const j=S.jobs.find(x=>x.id===id);if(!j)return;j.status='done';j.paymentStatus='unpaid';save();renderAll();snack('Job done — awaiting payment');}
+function markJobPaid(id){const j=S.jobs.find(x=>x.id===id);if(!j)return;j.paymentStatus='paid';j.paidDate=today();S.incomes.push({id:rand(),date:today(),desc:`Payment — ${j.clientName} (${j.clientAddr})`,amount:j.price,jobId:id});save();renderAll();snack('Payment received ✓');}
+function markCancelled(id){const j=S.jobs.find(x=>x.id===id);if(j){j.status='cancelled';save();renderAll();}}
+function deleteJob(id){if(!confirm('Delete this job?'))return;S.jobs=S.jobs.filter(j=>j.id!==id);save();renderAll();}
+function setFilter(f){jobFilter=f;renderJobs();}
+function renderJobs(){const el=document.getElementById('jobs-list');let jobs=[...S.jobs].sort((a,b)=>a.date>b.date?1:-1);if(jobFilter==='scheduled')jobs=jobs.filter(j=>j.status==='scheduled');else if(jobFilter==='done')jobs=jobs.filter(j=>j.status==='done');else if(jobFilter==='unpaid')jobs=jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid');else if(jobFilter==='paid')jobs=jobs.filter(j=>j.status==='done'&&j.paymentStatus==='paid');if(!jobs.length){el.innerHTML='<div class="empty"><div class="empty-icon">📅</div>No jobs here</div>';return;}el.innerHTML=jobs.map(j=>{const pb=j.status==='done'?(j.paymentStatus==='paid'?'<span class="badge bg-badge" style="margin-left:4px">paid</span>':'<span class="badge bb-badge" style="margin-left:4px">awaiting payment</span>'):'';return`<div class="li"><div class="li-top"><div><div class="li-name">${j.clientName}</div><div class="li-sub">${j.clientAddr} · ${fmtDate(j.date)}</div>${j.notes?`<div class="li-sub">📝 ${j.notes}</div>`:''}${j.status==='done'&&j.paymentStatus==='paid'&&j.paidDate?`<div class="li-sub">Paid ${fmtDate(j.paidDate)}</div>`:''}</div><div style="text-align:right"><div class="price-tag">R${j.price.toFixed(0)}</div><span class="badge ${j.status==='scheduled'?'ba-badge':j.status==='cancelled'?'bgr-badge':'bgr-badge'}">${j.status}</span>${pb}</div></div><div class="li-act">${j.status==='scheduled'?`<button class="btn bsuc bsm" onclick="markDone('${j.id}')">✓ Done</button><button class="btn bs bsm" onclick="markCancelled('${j.id}')">Cancel</button>`:''}${j.status==='done'&&j.paymentStatus==='unpaid'?`<button class="btn bp bsm" onclick="markJobPaid('${j.id}')">💰 Mark paid</button>`:''}<button class="btn bd bsm" onclick="deleteJob('${j.id}')">Delete</button></div></div>`;}).join('');}
 
-function renderClients() {
-  const el = document.getElementById('clients-list');
-  if(!state.clients.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">👤</div>No clients yet</div>'; return; }
-  const freqLabel = {weekly:'Weekly', biweekly:'Every 2 wks', monthly:'Monthly', adhoc:'Ad hoc'};
-  el.innerHTML = state.clients.map(c => `
-    <div class="list-item">
-      <div class="list-item-top">
-        <div>
-          <div class="list-item-name">${c.name}</div>
-          <div class="list-item-sub">${c.addr}${c.phone ? ' · ' + c.phone : ''}</div>
-          ${c.notes ? `<div class="list-item-sub" style="margin-top:2px">📝 ${c.notes}</div>` : ''}
-        </div>
-        <div style="text-align:right">
-          <div class="price-tag">R${c.price.toFixed(0)}</div>
-          <div style="font-size:12px;color:var(--text-muted)">${freqLabel[c.freq]||c.freq}</div>
-        </div>
-      </div>
-      <div class="list-item-actions">
-        <button class="btn btn-sm btn-primary" onclick="quickSchedule('${c.id}')">+ Schedule</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteClient('${c.id}')">Remove</button>
-      </div>
-    </div>`).join('');
-}
+function saveExpense(){const date=document.getElementById('e-date').value,desc=document.getElementById('e-desc').value.trim(),amt=parseFloat(document.getElementById('e-amt').value);if(!date||!desc||!amt){snack('Fill in all fields');return;}S.expenses.push({id:rand(),date,desc,amount:amt});document.getElementById('e-desc').value='';document.getElementById('e-amt').value='';save();renderAll();snack('Expense logged ✓');}
+function deleteExpense(id){S.expenses=S.expenses.filter(e=>e.id!==id);save();renderAll();}
+function renderFinance(){const tIn=S.incomes.reduce((s,x)=>s+x.amount,0),tEx=S.expenses.reduce((s,x)=>s+x.amount,0),pend=S.jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid').reduce((s,j)=>s+j.price,0),invOut=S.invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.amount,0);document.getElementById('f-in').textContent='R'+tIn.toFixed(0);document.getElementById('f-ex').textContent='R'+tEx.toFixed(0);const pr=document.getElementById('f-pr'),profit=tIn-tEx;pr.textContent='R'+profit.toFixed(0);pr.style.color=profit>=0?'var(--green)':'var(--red)';document.getElementById('f-pending').textContent='R'+pend.toFixed(0);document.getElementById('f-inv-out').textContent='R'+invOut.toFixed(0);const el=document.getElementById('finance-list'),all=[...S.incomes.map(x=>({...x,type:'income'})),...S.expenses.map(x=>({...x,type:'expense'}))].sort((a,b)=>a.date<b.date?1:-1);if(!all.length){el.innerHTML='<div class="empty"><div class="empty-icon">💰</div>No transactions yet</div>';return;}el.innerHTML=all.map(x=>`<div class="li"><div class="li-top"><div><div class="li-name">${x.desc}</div><div class="li-sub">${fmtDate(x.date)}</div></div><div style="text-align:right"><div style="font-size:16px;font-weight:800;color:${x.type==='income'?'var(--green)':'var(--red)'}">${x.type==='income'?'+':'-'}R${x.amount.toFixed(0)}</div><span class="badge ${x.type==='income'?'bg-badge':'br-badge'}">${x.type}</span></div></div>${x.type==='expense'?`<div class="li-act"><button class="btn bd bsm" onclick="deleteExpense('${x.id}')">Delete</button></div>`:''}</div>`).join('');}
 
-function quickSchedule(clientId) {
-  showPage('schedule', document.querySelectorAll('.tab')[2]);
-  setTimeout(() => {
-    toggleForm('job-form');
-    document.getElementById('j-client').value = clientId;
-  }, 100);
-}
+function prefillInv(){const cid=document.getElementById('i-client').value,c=S.clients.find(x=>x.id===cid);if(c)document.getElementById('i-amt').value=c.price;}
+function saveInvoice(){const cid=document.getElementById('i-client').value,desc=document.getElementById('i-desc').value.trim(),amt=parseFloat(document.getElementById('i-amt').value),due=document.getElementById('i-due').value;if(!cid||!desc||!amt||!due){snack('Fill in all fields');return;}const c=S.clients.find(x=>x.id===cid);S.invoices.push({id:rand(),num:S.nextInv++,clientId:cid,clientName:c.name,clientAddr:c.addr,desc,amount:amt,due,status:'unpaid',created:today()});document.getElementById('i-desc').value='';save();renderAll();toggleForm('ivf');snack('Invoice created ✓');}
+function markInvPaid(id){const inv=S.invoices.find(x=>x.id===id);if(!inv)return;inv.status='paid';inv.paidDate=today();S.incomes.push({id:rand(),date:today(),desc:`Invoice #${inv.num} — ${inv.clientName}`,amount:inv.amount,invoiceId:id});save();renderAll();snack('Invoice paid ✓');}
+function deleteInvoice(id){if(!confirm('Delete this invoice?'))return;S.invoices=S.invoices.filter(i=>i.id!==id);save();renderAll();}
+function renderInvoices(){const el=document.getElementById('invoices-list');if(!S.invoices.length){el.innerHTML='<div class="empty"><div class="empty-icon">🧾</div>No invoices yet</div>';return;}el.innerHTML=[...S.invoices].sort((a,b)=>a.created<b.created?1:-1).map(i=>`<div class="li"><div class="li-top"><div><div class="li-name">${i.clientName} <span style="color:var(--text-faint);font-weight:400;font-size:12px">#${i.num}</span></div><div class="li-sub">${i.desc}</div><div class="li-sub">Due ${fmtDate(i.due)}${i.paidDate?' · Paid '+fmtDate(i.paidDate):''}</div></div><div style="text-align:right"><div class="price-tag">R${i.amount.toFixed(0)}</div><span class="badge ${i.status==='paid'?'bg-badge':'ba-badge'}">${i.status}</span></div></div><div class="li-act">${i.status==='unpaid'?`<button class="btn bp bsm" onclick="markInvPaid('${i.id}')">💰 Mark paid</button>`:''}<button class="btn bd bsm" onclick="deleteInvoice('${i.id}')">Delete</button></div></div>`).join('');}
 
-// ── JOBS ──
-function saveJob() {
-  const cid = document.getElementById('j-client').value;
-  const date = document.getElementById('j-date').value;
-  if(!cid || !date) { snack('Select a client and date'); return; }
-  const c = state.clients.find(x => x.id === cid);
-  state.jobs.push({
-    id: '' + rand(), clientId: cid, clientName: c.name,
-    clientAddr: c.addr, price: c.price, date,
-    notes: document.getElementById('j-notes').value.trim(),
-    status: 'scheduled'
-  });
-  document.getElementById('j-notes').value = '';
-  save(); renderAll(); toggleForm('job-form'); snack('Job scheduled ✓');
-}
+function renderDashboard(){const now=new Date(),ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;document.getElementById('d-clients').textContent=S.clients.length;document.getElementById('d-jobs').textContent=S.jobs.filter(j=>j.status==='done'&&j.date.startsWith(ym)).length;const moIn=S.incomes.filter(x=>x.date&&x.date.startsWith(ym)).reduce((s,x)=>s+x.amount,0);document.getElementById('d-income').textContent='R'+moIn.toFixed(0);const aw=S.jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid').reduce((s,j)=>s+j.price,0);document.getElementById('d-awaiting').textContent='R'+aw.toFixed(0);const moEx=S.expenses.filter(e=>e.date&&e.date.startsWith(ym)).reduce((s,e)=>s+e.amount,0);document.getElementById('d-mo-in').textContent='R'+moIn.toFixed(0);document.getElementById('d-mo-ex').textContent='R'+moEx.toFixed(0);const pr=document.getElementById('d-mo-pr'),p=moIn-moEx;pr.textContent='R'+p.toFixed(0);pr.style.color=p>=0?'var(--green)':'var(--red)';const up=S.jobs.filter(j=>j.status==='scheduled').sort((a,b)=>a.date>b.date?1:-1).slice(0,6);document.getElementById('d-upcoming').innerHTML=up.length?up.map(j=>`<div class="upcoming"><div><div style="font-weight:700">${j.clientName}</div><div style="font-size:12px;color:var(--text-muted)">${j.clientAddr}${j.notes?' · '+j.notes:''}</div></div><div style="text-align:right"><div style="font-size:12px;color:var(--text-muted)">${fmtDate(j.date)}</div><div class="price-tag" style="font-size:14px">R${j.price.toFixed(0)}</div></div></div>`).join(''):'<div class="empty"><div class="empty-icon">📋</div>No upcoming jobs</div>';const awJobs=S.jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid').sort((a,b)=>a.date<b.date?1:-1);document.getElementById('d-await-list').innerHTML=awJobs.length?awJobs.map(j=>`<div class="upcoming"><div><div style="font-weight:700">${j.clientName}</div><div style="font-size:12px;color:var(--text-muted)">${j.clientAddr} · done ${fmtDate(j.date)}</div></div><div style="text-align:right"><div class="price-tag" style="font-size:14px">R${j.price.toFixed(0)}</div><button class="btn bp bsm" style="margin-top:4px" onclick="markJobPaid('${j.id}')">💰 Mark paid</button></div></div>`).join(''):'<div class="empty"><div class="empty-icon">✅</div>All paid up</div>';}
 
-function markDone(id) {
-  const j = state.jobs.find(x => x.id === id);
-  if(!j) return;
-  j.status = 'done';
-  state.incomes.push({ id: '' + rand(), date: j.date, desc: `Mow — ${j.clientName} (${j.clientAddr})`, amount: j.price, jobId: id });
-  save(); renderAll(); snack('Job marked done — income logged ✓');
-}
+function renderAll(){renderDashboard();renderClients();renderJobs();renderFinance();renderInvoices();}
 
-function markCancelled(id) {
-  const j = state.jobs.find(x => x.id === id);
-  if(j) { j.status = 'cancelled'; save(); renderAll(); }
-}
+function downloadExcel(){if(typeof XLSX==='undefined'){snack('Excel library loading, try again');return;}const wb=XLSX.utils.book_new(),tIn=S.incomes.reduce((s,x)=>s+x.amount,0),tEx=S.expenses.reduce((s,x)=>s+x.amount,0),pend=S.jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid').reduce((s,j)=>s+j.price,0);XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Lawn Manager — Summary'],['Generated',new Date().toLocaleString('en-ZA')],['Business',S.settings.bname||''],['Owner',S.settings.name||''],['Phone',S.settings.phone||''],['Complex',S.settings.complex||''],[],['Metric','Value'],['Total clients',S.clients.length],['Jobs completed',S.jobs.filter(j=>j.status==='done').length],['Jobs scheduled',S.jobs.filter(j=>j.status==='scheduled').length],['Total income received',tIn],['Total expenses',tEx],['Net profit',tIn-tEx],['Pending (unpaid jobs)',pend],['Outstanding invoices',S.invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.amount,0)]]),'Summary');const cl=[['Name','Unit','Phone','Price (R)','Frequency','Notes']];S.clients.forEach(c=>cl.push([c.name,c.addr,c.phone,c.price,freqLbl[c.freq]||c.freq,c.notes]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(cl),'Clients');const sc=[['Client','Address','Date','Price (R)','Job Status','Payment Status','Date Paid','Notes']];[...S.jobs].sort((a,b)=>a.date>b.date?1:-1).forEach(j=>sc.push([j.clientName,j.clientAddr,j.date,j.price,j.status,j.status==='done'?j.paymentStatus:'—',j.paidDate||'',j.notes]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sc),'Schedule');const fi=[['Date','Type','Description','Amount (R)']];[...S.incomes.map(x=>({date:x.date,type:'Income',desc:x.desc,amount:x.amount})),...S.expenses.map(x=>({date:x.date,type:'Expense',desc:x.desc,amount:x.amount}))].sort((a,b)=>a.date<b.date?1:-1).forEach(x=>fi.push([x.date,x.type,x.desc,x.amount]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(fi),'Finance');const iv=[['Inv #','Client','Description','Amount (R)','Issued','Due','Status','Date Paid']];[...S.invoices].sort((a,b)=>a.num-b.num).forEach(i=>iv.push([i.num,i.clientName,i.desc,i.amount,i.created,i.due,i.status,i.paidDate||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(iv),'Invoices');XLSX.writeFile(wb,`lawn-manager-${today()}.xlsx`);snack('Excel downloaded ✓');}
 
-function deleteJob(id) {
-  if(!confirm('Delete this job?')) return;
-  state.jobs = state.jobs.filter(j => j.id !== id);
-  save(); renderAll();
-}
+function exportJSON(){const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`lawn-backup-${today()}.json`;a.click();snack('Backup exported ✓');}
+function importJSON(evt){const f=evt.target.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(!confirm('Replace all current data with this backup?'))return;S=d;if(!S.incomes)S.incomes=[];if(!S.settings)S.settings={};save();renderAll();applySettings();snack('Data imported ✓');}catch(err){snack('Invalid backup file');}};r.readAsText(f);evt.target.value='';}
+function clearData(){if(!confirm('Delete ALL data permanently?'))return;S={clients:[],jobs:[],expenses:[],incomes:[],invoices:[],nextInv:1,settings:{}};save();renderAll();snack('All data cleared');}
 
-function setJobFilter(f) {
-  jobFilter = f;
-  ['all','scheduled','done','cancelled'].forEach(x => {
-    document.getElementById('jf-'+x).style.fontWeight = x === f ? '700' : '500';
-    document.getElementById('jf-'+x).style.opacity = x === f ? '1' : '0.6';
-  });
-  renderJobs();
-}
-
-function renderJobs() {
-  const el = document.getElementById('jobs-list');
-  let jobs = [...state.jobs].sort((a,b) => a.date > b.date ? 1 : -1);
-  if(jobFilter !== 'all') jobs = jobs.filter(j => j.status === jobFilter);
-  if(!jobs.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div>No jobs here</div>'; return; }
-  const badge = {scheduled:'badge-amber',done:'badge-green',cancelled:'badge-gray'};
-  el.innerHTML = jobs.map(j => `
-    <div class="list-item">
-      <div class="list-item-top">
-        <div>
-          <div class="list-item-name">${j.clientName}</div>
-          <div class="list-item-sub">${j.clientAddr} · ${formatDate(j.date)}</div>
-          ${j.notes ? `<div class="list-item-sub">📝 ${j.notes}</div>` : ''}
-        </div>
-        <div style="text-align:right">
-          <div class="price-tag">R${j.price.toFixed(0)}</div>
-          <span class="badge ${badge[j.status]||'badge-gray'}">${j.status}</span>
-        </div>
-      </div>
-      <div class="list-item-actions">
-        ${j.status==='scheduled' ? `
-          <button class="btn btn-sm btn-success" onclick="markDone('${j.id}')">✓ Done</button>
-          <button class="btn btn-sm btn-secondary" onclick="markCancelled('${j.id}')">Cancel</button>` : ''}
-        <button class="btn btn-sm btn-danger" onclick="deleteJob('${j.id}')">Delete</button>
-      </div>
-    </div>`).join('');
-}
-
-// ── FINANCE ──
-function saveExpense() {
-  const date = document.getElementById('e-date').value;
-  const desc = document.getElementById('e-desc').value.trim();
-  const amt = parseFloat(document.getElementById('e-amt').value);
-  if(!date || !desc || !amt) { snack('Fill in all fields'); return; }
-  state.expenses.push({ id: '' + rand(), date, desc, amount: amt });
-  document.getElementById('e-desc').value = '';
-  document.getElementById('e-amt').value = '';
-  save(); renderAll(); snack('Expense logged ✓');
-}
-
-function deleteExpense(id) {
-  state.expenses = state.expenses.filter(e => e.id !== id);
-  save(); renderAll();
-}
-
-function renderFinance() {
-  const totalIn = state.incomes.reduce((s,x) => s + x.amount, 0);
-  const totalEx = state.expenses.reduce((s,x) => s + x.amount, 0);
-  document.getElementById('f-income').textContent = 'R' + totalIn.toFixed(0);
-  document.getElementById('f-exp').textContent = 'R' + totalEx.toFixed(0);
-  const profit = totalIn - totalEx;
-  const pEl = document.getElementById('f-profit');
-  pEl.textContent = 'R' + profit.toFixed(0);
-  pEl.style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
-
-  const el = document.getElementById('finance-list');
-  const all = [
-    ...state.incomes.map(x => ({...x, type:'income'})),
-    ...state.expenses.map(x => ({...x, type:'expense'}))
-  ].sort((a,b) => a.date < b.date ? 1 : -1);
-  if(!all.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">💰</div>No transactions yet</div>'; return; }
-  el.innerHTML = all.map(x => `
-    <div class="list-item">
-      <div class="list-item-top">
-        <div>
-          <div class="list-item-name">${x.desc}</div>
-          <div class="list-item-sub">${formatDate(x.date)}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:16px;font-weight:700;color:${x.type==='income'?'var(--green)':'var(--red)'}">
-            ${x.type==='income'?'+':'-'}R${x.amount.toFixed(0)}
-          </div>
-          <span class="badge ${x.type==='income'?'badge-green':'badge-red'}">${x.type}</span>
-        </div>
-      </div>
-      ${x.type==='expense' ? `<div class="list-item-actions"><button class="btn btn-sm btn-danger" onclick="deleteExpense('${x.id}')">Delete</button></div>` : ''}
-    </div>`).join('');
-}
-
-// ── INVOICES ──
-function prefillInvoice() {
-  const cid = document.getElementById('i-client').value;
-  const c = state.clients.find(x => x.id === cid);
-  if(c) document.getElementById('i-amt').value = c.price;
-}
-
-function saveInvoice() {
-  const cid = document.getElementById('i-client').value;
-  const desc = document.getElementById('i-desc').value.trim();
-  const amt = parseFloat(document.getElementById('i-amt').value);
-  const due = document.getElementById('i-due').value;
-  if(!cid || !desc || !amt || !due) { snack('Fill in all fields'); return; }
-  const c = state.clients.find(x => x.id === cid);
-  state.invoices.push({
-    id: '' + rand(), num: state.nextInv++,
-    clientId: cid, clientName: c.name, clientAddr: c.addr,
-    desc, amount: amt, due, status: 'unpaid',
-    created: today()
-  });
-  document.getElementById('i-desc').value = '';
-  save(); renderAll(); toggleForm('invoice-form'); snack('Invoice created ✓');
-}
-
-function markPaid(id) {
-  const inv = state.invoices.find(x => x.id === id);
-  if(!inv) return;
-  inv.status = 'paid';
-  inv.paidDate = today();
-  state.incomes.push({ id: '' + rand(), date: today(), desc: `Invoice #${inv.num} — ${inv.clientName}`, amount: inv.amount, invoiceId: id });
-  save(); renderAll(); snack('Invoice marked paid — income logged ✓');
-}
-
-function deleteInvoice(id) {
-  if(!confirm('Delete this invoice?')) return;
-  state.invoices = state.invoices.filter(i => i.id !== id);
-  save(); renderAll();
-}
-
-function renderInvoices() {
-  const el = document.getElementById('invoices-list');
-  if(!state.invoices.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🧾</div>No invoices yet</div>'; return; }
-  const sorted = [...state.invoices].sort((a,b) => a.created < b.created ? 1 : -1);
-  el.innerHTML = sorted.map(i => `
-    <div class="list-item">
-      <div class="list-item-top">
-        <div>
-          <div class="list-item-name">${i.clientName} <span style="color:var(--text-faint);font-weight:400;font-size:13px">#${i.num}</span></div>
-          <div class="list-item-sub">${i.desc}</div>
-          <div class="list-item-sub">Due ${formatDate(i.due)}</div>
-        </div>
-        <div style="text-align:right">
-          <div class="price-tag">R${i.amount.toFixed(0)}</div>
-          <span class="badge ${i.status==='paid'?'badge-green':'badge-amber'}">${i.status}</span>
-        </div>
-      </div>
-      <div class="list-item-actions">
-        ${i.status==='unpaid' ? `<button class="btn btn-sm btn-success" onclick="markPaid('${i.id}')">Mark paid</button>` : ''}
-        <button class="btn btn-sm btn-danger" onclick="deleteInvoice('${i.id}')">Delete</button>
-      </div>
-    </div>`).join('');
-}
-
-// ── DASHBOARD ──
-function renderDashboard() {
-  const now = new Date();
-  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  document.getElementById('today-date').textContent = now.toLocaleDateString('en-ZA', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-  document.getElementById('d-clients').textContent = state.clients.length;
-  const doneThisMonth = state.jobs.filter(j => j.status==='done' && j.date.startsWith(ym)).length;
-  document.getElementById('d-jobs').textContent = doneThisMonth;
-  const incomeThisMonth = state.incomes.filter(x => x.date && x.date.startsWith(ym)).reduce((s,x) => s+x.amount, 0);
-  document.getElementById('d-income').textContent = 'R' + incomeThisMonth.toFixed(0);
-  const outstanding = state.invoices.filter(i => i.status==='unpaid').reduce((s,i) => s+i.amount, 0);
-  document.getElementById('d-outstanding').textContent = 'R' + outstanding.toFixed(0);
-  const expThisMonth = state.expenses.filter(e => e.date && e.date.startsWith(ym)).reduce((s,e) => s+e.amount, 0);
-  document.getElementById('d-mo-income').textContent = 'R' + incomeThisMonth.toFixed(0);
-  document.getElementById('d-mo-exp').textContent = 'R' + expThisMonth.toFixed(0);
-  const profit = incomeThisMonth - expThisMonth;
-  const pEl = document.getElementById('d-mo-profit');
-  pEl.textContent = 'R' + profit.toFixed(0);
-  pEl.style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
-  const upcoming = state.jobs.filter(j => j.status==='scheduled').sort((a,b) => a.date > b.date ? 1 : -1).slice(0,6);
-  const el = document.getElementById('d-upcoming');
-  if(!upcoming.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>No upcoming jobs</div>'; return; }
-  el.innerHTML = upcoming.map(j => `
-    <div class="upcoming">
-      <div>
-        <div style="font-weight:600">${j.clientName}</div>
-        <div style="font-size:12px;color:var(--text-muted)">${j.clientAddr}${j.notes?' · '+j.notes:''}</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:13px;color:var(--text-muted)">${formatDate(j.date)}</div>
-        <div class="price-tag" style="font-size:14px">R${j.price.toFixed(0)}</div>
-      </div>
-    </div>`).join('');
-}
-
-function renderAll() {
-  renderDashboard();
-  renderClients();
-  renderJobs();
-  renderFinance();
-  renderInvoices();
-}
-
-// ── EXPORT / IMPORT ──
-function exportData() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'lawn-manager-backup-' + today() + '.json';
-  a.click();
-  snack('Data exported ✓');
-}
-
-function importData(evt) {
-  const file = evt.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if(!confirm('This will replace all your current data. Continue?')) return;
-      state = data;
-      save(); renderAll(); applySettings(); snack('Data imported ✓');
-    } catch(err) { snack('Invalid file'); }
-  };
-  reader.readAsText(file);
-  evt.target.value = '';
-}
-
-function clearAllData() {
-  if(!confirm('Delete ALL data permanently? This cannot be undone.')) return;
-  state = { clients:[], jobs:[], expenses:[], incomes:[], invoices:[], nextInv:1, settings:{} };
-  save(); renderAll(); snack('All data cleared');
-}
-
-load();
+initLock();
 </script>
 </body>
 </html>
