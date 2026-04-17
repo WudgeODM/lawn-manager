@@ -9,31 +9,27 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--green:#1a6b3c;--green-mid:#2e8b57;--green-light:#d6efe0;--text:#111;--text-muted:#666;--text-faint:#bbb;--border:#e0e0e0;--bg:#fff;--bg2:#f7f7f7;--bg3:#efefef;--red:#c0392b;--red-bg:#fdecea;--amber:#b45309;--amber-bg:#fef3c7;--blue:#1e40af;--blue-bg:#eff6ff;--radius:12px;--rsm:7px}
+:root{--green:#1a6b3c;--green-light:#d6efe0;--text:#111;--text-muted:#666;--text-faint:#bbb;--border:#e0e0e0;--bg:#fff;--bg2:#f7f7f7;--bg3:#efefef;--red:#c0392b;--red-bg:#fdecea;--amber:#b45309;--amber-bg:#fef3c7;--blue:#1e40af;--blue-bg:#eff6ff;--radius:12px;--rsm:7px}
 @media(prefers-color-scheme:dark){:root{--green:#4ade80;--text:#f0f0f0;--text-muted:#aaa;--text-faint:#555;--border:#2a2a2a;--bg:#141414;--bg2:#1e1e1e;--bg3:#282828;--red:#f87171;--red-bg:#2d0f0f;--amber:#fbbf24;--amber-bg:#2d1a00;--blue:#93c5fd;--blue-bg:#1e2d4a;--green-light:#052e16}}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:var(--text);background:var(--bg);min-height:100vh}
 
 /* LOCK */
-#lock{position:fixed;inset:0;background:var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:32px 24px}
+#lock{position:fixed;inset:0;background:var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:32px 24px;transition:opacity 0.2s}
 #lock.gone{display:none}
-.l-logo{font-size:48px;margin-bottom:8px}
+.l-logo{font-size:52px;margin-bottom:8px}
 .l-title{color:#fff;font-size:22px;font-weight:700;margin-bottom:4px}
-.l-sub{color:rgba(255,255,255,0.65);font-size:14px;margin-bottom:32px;text-align:center}
-.pin-dots{display:flex;gap:14px;margin-bottom:26px}
-.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.5);transition:background 0.15s}
+.l-sub{color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:32px;text-align:center}
+.pin-dots{display:flex;gap:16px;margin-bottom:28px}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.45);transition:background 0.12s}
 .pin-dot.on{background:#fff;border-color:#fff}
-.pin-pad{display:grid;grid-template-columns:repeat(3,70px);gap:12px;margin-bottom:18px}
-.pk{width:70px;height:70px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff;font-size:22px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
-.pk:active{background:rgba(255,255,255,0.3);transform:scale(0.92)}
-#bio-btn{background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.35);color:#fff;padding:11px 26px;border-radius:30px;font-size:14px;cursor:pointer;display:none;align-items:center;gap:7px;margin-top:2px}
+.pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px;margin-bottom:18px}
+.pk{width:72px;height:72px;border-radius:50%;border:2px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;font-size:23px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:background 0.1s}
+.pk:active{background:rgba(255,255,255,0.28);transform:scale(0.93)}
+#bio-btn{background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.3);color:#fff;padding:11px 26px;border-radius:30px;font-size:14px;cursor:pointer;display:none;align-items:center;gap:7px;margin-top:4px}
 #bio-btn.show{display:flex}
 #lock-msg{color:rgba(255,255,255,0.75);font-size:13px;margin-top:10px;min-height:18px;text-align:center}
-.s-form{width:100%;max-width:300px}
-.s-lbl{color:rgba(255,255,255,0.8);font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:7px}
-.s-inp{width:100%;padding:12px 16px;border-radius:var(--rsm);border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;font-size:18px;text-align:center;letter-spacing:4px;outline:none;margin-bottom:14px}
-.s-inp::placeholder{color:rgba(255,255,255,0.35);letter-spacing:0}
-.s-btn{width:100%;padding:13px;border-radius:var(--rsm);border:none;background:#fff;color:var(--green);font-size:16px;font-weight:700;cursor:pointer}
+#lock-loading{color:rgba(255,255,255,0.6);font-size:13px;margin-top:12px;text-align:center}
 
 /* TOPBAR */
 .topbar{background:var(--green);color:#fff;padding:13px 14px 0;position:sticky;top:0;z-index:100}
@@ -41,9 +37,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .tb-title{font-size:16px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tb-actions{display:flex;gap:6px;flex-shrink:0}
 .tb-btn{background:rgba(255,255,255,0.18);border:none;color:#fff;padding:5px 11px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
-.sync-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
-.sync-ok{background:#4ade80}.sync-syncing{background:#fbbf24;animation:pulse 1s infinite}.sync-err{background:#f87171}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.sdot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+.s-ok{background:#4ade80}.s-sy{background:#fbbf24;animation:pulse 1s infinite}.s-er{background:#f87171}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
 .tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{padding:8px 12px;font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);background:none;border:none;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all 0.15s}
@@ -54,8 +50,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .page.active{display:block}
 .card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
 .ct{font-size:14px;font-weight:700;margin-bottom:11px}
-
-/* METRICS */
 .mg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .mg3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
 .mg4{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
@@ -63,86 +57,60 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .metric{background:var(--bg2);border-radius:var(--rsm);padding:12px;text-align:center}
 .mv{font-size:20px;font-weight:800;color:var(--green);margin-top:3px}
 .ml{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em}
-
-/* FORM */
 .field{margin-bottom:11px}
 .field label{display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em}
 .field input,.field select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--rsm);font-size:15px;background:var(--bg);color:var(--text);outline:none}
 .field input:focus,.field select:focus{border-color:var(--green)}
 .fr2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-/* BUTTONS */
 .btn{padding:9px 14px;font-size:13px;font-weight:600;border-radius:var(--rsm);border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent}
 .btn:active{opacity:0.7}
-.bp{background:var(--green);color:#fff}
-.bs{background:var(--bg3);color:var(--text)}
-.bd{background:var(--red-bg);color:var(--red)}
-.bsuc{background:var(--green-light);color:var(--green)}
-.bamb{background:var(--amber-bg);color:var(--amber)}
-.bbl{background:var(--blue-bg);color:var(--blue)}
+.bp{background:var(--green);color:#fff}.bs{background:var(--bg3);color:var(--text)}.bd{background:var(--red-bg);color:var(--red)}
+.bsuc{background:var(--green-light);color:var(--green)}.bamb{background:var(--amber-bg);color:var(--amber)}.bbl{background:var(--blue-bg);color:var(--blue)}
 .bsm{padding:5px 10px;font-size:11px}
 .br{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
-
-/* LIST */
 .li{border:1px solid var(--border);border-radius:var(--rsm);padding:12px 14px;margin-bottom:8px;background:var(--bg)}
 .li-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .li-name{font-weight:700;font-size:15px}
 .li-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
 .li-act{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-
-/* BADGES */
 .badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700}
-.bg-b{background:var(--green-light);color:var(--green)}
-.ba-b{background:var(--amber-bg);color:var(--amber)}
-.br-b{background:var(--red-bg);color:var(--red)}
-.bgr-b{background:var(--bg3);color:var(--text-muted)}
-.bb-b{background:var(--blue-bg);color:var(--blue)}
-
-/* MISC */
+.bg-b{background:var(--green-light);color:var(--green)}.ba-b{background:var(--amber-bg);color:var(--amber)}
+.br-b{background:var(--red-bg);color:var(--red)}.bgr-b{background:var(--bg3);color:var(--text-muted)}.bb-b{background:var(--blue-bg);color:var(--blue)}
 .sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .stt{font-size:16px;font-weight:700}
 .empty{text-align:center;padding:26px 16px;color:var(--text-faint);font-size:14px}
 .ei{font-size:32px;margin-bottom:6px}
-.fw{display:none;margin-bottom:14px}
-.fw.open{display:block}
-.dvd{border:none;border-top:1px solid var(--border);margin:13px 0}
+.fw{display:none;margin-bottom:14px}.fw.open{display:block}
 .upc{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
 .upc:last-child{border:none}
 .ptag{font-size:15px;font-weight:800;color:var(--green)}
 #snack{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 22px;border-radius:24px;font-size:13px;opacity:0;pointer-events:none;transition:opacity 0.2s;z-index:1000;white-space:nowrap}
 #snack.show{opacity:1}
+.info-box{background:var(--bg2);border-radius:var(--rsm);padding:10px 13px;font-size:13px;color:var(--text-muted);margin-bottom:12px}
 </style>
 </head>
 <body>
 
-<!-- LOCK SCREEN -->
+<!-- LOCK -->
 <div id="lock">
-  <div id="ls-setup" style="width:100%;max-width:300px;display:none;flex-direction:column;align-items:center">
+  <div id="lock-inner" style="display:flex;flex-direction:column;align-items:center">
     <div class="l-logo">🌿</div>
-    <div class="l-title">Lawn Manager</div>
-    <div class="l-sub">Set a PIN to protect your data</div>
-    <div class="s-form">
-      <div class="s-lbl">Choose a 4-digit PIN</div>
-      <input class="s-inp" id="sp1" type="password" inputmode="numeric" maxlength="4" placeholder="····" oninput="sn()">
-      <div class="s-lbl">Confirm PIN</div>
-      <input class="s-inp" id="sp2" type="password" inputmode="numeric" maxlength="4" placeholder="····" oninput="sc()">
-      <button class="s-btn" id="ssb" onclick="savePin()" style="opacity:0.4;pointer-events:none">Set PIN &amp; Enter</button>
-      <div id="sm" style="color:rgba(255,255,255,0.7);font-size:13px;text-align:center;margin-top:8px;min-height:18px"></div>
+    <div class="l-title" id="lock-name">Lawn Manager</div>
+    <div class="l-sub">Enter PIN to continue</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
     </div>
-  </div>
-  <div id="ls-entry" style="display:none;flex-direction:column;align-items:center">
-    <div class="l-logo">🌿</div>
-    <div class="l-title" id="lock-app-name">Lawn Manager</div>
-    <div class="l-sub">Enter your PIN</div>
-    <div class="pin-dots"><div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div><div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div></div>
     <div class="pin-pad">
       <button class="pk" onclick="pk('1')">1</button><button class="pk" onclick="pk('2')">2</button><button class="pk" onclick="pk('3')">3</button>
       <button class="pk" onclick="pk('4')">4</button><button class="pk" onclick="pk('5')">5</button><button class="pk" onclick="pk('6')">6</button>
       <button class="pk" onclick="pk('7')">7</button><button class="pk" onclick="pk('8')">8</button><button class="pk" onclick="pk('9')">9</button>
-      <button class="pk" onclick="pk('0')" style="grid-column:2">0</button><button class="pk" onclick="pdel()">&#9003;</button>
+      <button class="pk" onclick="pk('0')" style="grid-column:2">0</button>
+      <button class="pk" onclick="pdel()">&#9003;</button>
     </div>
     <button id="bio-btn" onclick="bioAuth()">&#128275; Use biometrics</button>
     <div id="lock-msg"></div>
+    <div id="lock-loading"></div>
   </div>
 </div>
 
@@ -152,7 +120,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
     <div class="tb-row">
       <div class="tb-title" id="app-title">🌿 Lawn Manager</div>
       <div class="tb-actions">
-        <button class="tb-btn" id="sync-btn" onclick="syncNow()"><span class="sync-dot sync-ok" id="sync-dot"></span><span id="sync-lbl">Synced</span></button>
+        <button class="tb-btn" onclick="syncNow()"><span class="sdot s-ok" id="sdot"></span><span id="slbl">Synced</span></button>
         <button class="tb-btn" onclick="dlExcel()">📊 Excel</button>
       </div>
     </div>
@@ -174,8 +142,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
       <div class="metric"><div class="ml">Income this month</div><div class="mv" id="d-in">R0</div></div>
       <div class="metric"><div class="ml">Awaiting payment</div><div class="mv" id="d-aw" style="color:var(--amber)">R0</div></div>
     </div>
-    <div class="card">
-      <div class="ct">This month</div>
+    <div class="card"><div class="ct">This month</div>
       <div class="mg3" style="margin-bottom:0">
         <div class="metric"><div class="ml">Income received</div><div class="mv" id="d-mi">R0</div></div>
         <div class="metric"><div class="ml">Expenses</div><div class="mv" id="d-me" style="color:var(--red)">R0</div></div>
@@ -192,8 +159,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
     <div class="fw card" id="cf">
       <div class="ct">New client</div>
       <div class="field"><label>Name</label><input id="c-nm" placeholder="e.g. Mrs Smith"></div>
-      <div class="fr2"><div class="field"><label>Unit / address</label><input id="c-ad" placeholder="Unit 12"></div><div class="field"><label>Phone</label><input id="c-ph" placeholder="082 000 0000"></div></div>
-      <div class="fr2"><div class="field"><label>Price per mow (R)</label><input id="c-pr" type="number" placeholder="150"></div><div class="field"><label>Frequency</label><select id="c-fr"><option value="weekly">Weekly</option><option value="biweekly" selected>Every 2 weeks</option><option value="monthly">Monthly</option><option value="adhoc">Ad hoc</option></select></div></div>
+      <div class="fr2">
+        <div class="field"><label>Unit / address</label><input id="c-ad" placeholder="Unit 12"></div>
+        <div class="field"><label>Phone</label><input id="c-ph" placeholder="082 000 0000"></div>
+      </div>
+      <div class="fr2">
+        <div class="field"><label>Price per mow (R)</label><input id="c-pr" type="number" placeholder="150"></div>
+        <div class="field"><label>Frequency</label>
+          <select id="c-fr"><option value="weekly">Weekly</option><option value="biweekly" selected>Every 2 weeks</option><option value="monthly">Monthly</option><option value="adhoc">Ad hoc</option></select>
+        </div>
+      </div>
       <div class="field"><label>Notes</label><input id="c-nt" placeholder="Gate code, dog, etc."></div>
       <div class="br"><button class="btn bp" onclick="saveClient()">Save client</button><button class="btn bs" onclick="tf('cf')">Cancel</button></div>
     </div>
@@ -206,7 +181,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
     <div class="fw card" id="jf">
       <div class="ct">New job</div>
       <div class="field"><label>Client</label><select id="j-cl"></select></div>
-      <div class="fr2"><div class="field"><label>Date</label><input id="j-dt" type="date"></div><div class="field"><label>Notes</label><input id="j-nt" placeholder="Optional"></div></div>
+      <div class="fr2">
+        <div class="field"><label>Date</label><input id="j-dt" type="date"></div>
+        <div class="field"><label>Notes</label><input id="j-nt" placeholder="Optional"></div>
+      </div>
       <div class="br"><button class="btn bp" onclick="saveJob()">Save job</button><button class="btn bs" onclick="tf('jf')">Cancel</button></div>
     </div>
     <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
@@ -221,11 +199,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 
   <!-- FINANCE -->
   <div class="page" id="page-finance" style="padding-top:14px">
-    <div class="mg3"><div class="metric"><div class="ml">Total income received</div><div class="mv" id="f-in">R0</div></div><div class="metric"><div class="ml">Total expenses</div><div class="mv" id="f-ex" style="color:var(--red)">R0</div></div><div class="metric"><div class="ml">Net profit</div><div class="mv" id="f-pr">R0</div></div></div>
-    <div class="mg2"><div class="metric"><div class="ml">Pending (unpaid jobs)</div><div class="mv" id="f-pe" style="color:var(--amber)">R0</div></div><div class="metric"><div class="ml">Outstanding invoices</div><div class="mv" id="f-iv" style="color:var(--amber)">R0</div></div></div>
-    <div class="card">
-      <div class="ct">Log expense</div>
-      <div class="fr2"><div class="field"><label>Date</label><input id="e-dt" type="date"></div><div class="field"><label>Amount (R)</label><input id="e-am" type="number" placeholder="0"></div></div>
+    <div class="mg3">
+      <div class="metric"><div class="ml">Total income received</div><div class="mv" id="f-in">R0</div></div>
+      <div class="metric"><div class="ml">Total expenses</div><div class="mv" id="f-ex" style="color:var(--red)">R0</div></div>
+      <div class="metric"><div class="ml">Net profit</div><div class="mv" id="f-pr">R0</div></div>
+    </div>
+    <div class="mg2">
+      <div class="metric"><div class="ml">Pending (unpaid jobs)</div><div class="mv" id="f-pe" style="color:var(--amber)">R0</div></div>
+      <div class="metric"><div class="ml">Outstanding invoices</div><div class="mv" id="f-iv" style="color:var(--amber)">R0</div></div>
+    </div>
+    <div class="card"><div class="ct">Log expense</div>
+      <div class="fr2">
+        <div class="field"><label>Date</label><input id="e-dt" type="date"></div>
+        <div class="field"><label>Amount (R)</label><input id="e-am" type="number" placeholder="0"></div>
+      </div>
       <div class="field"><label>Description</label><input id="e-ds" placeholder="e.g. Fuel, blade sharpening"></div>
       <button class="btn bp" onclick="saveExp()">Add expense</button>
     </div>
@@ -240,7 +227,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
       <div class="ct">New invoice</div>
       <div class="field"><label>Client</label><select id="i-cl" onchange="piInv()"></select></div>
       <div class="field"><label>Description</label><input id="i-ds" placeholder="e.g. 2x lawn mows April"></div>
-      <div class="fr2"><div class="field"><label>Amount (R)</label><input id="i-am" type="number" placeholder="0"></div><div class="field"><label>Due date</label><input id="i-du" type="date"></div></div>
+      <div class="fr2">
+        <div class="field"><label>Amount (R)</label><input id="i-am" type="number" placeholder="0"></div>
+        <div class="field"><label>Due date</label><input id="i-du" type="date"></div>
+      </div>
       <div class="br"><button class="btn bp" onclick="saveInv()">Create</button><button class="btn bs" onclick="tf('ivf')">Cancel</button></div>
     </div>
     <div id="invoices-list"></div>
@@ -248,25 +238,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 
   <!-- SETTINGS -->
   <div class="page" id="page-settings" style="padding-top:14px">
-    <div class="card">
-      <div class="ct">Business details</div>
+    <div class="card"><div class="ct">Business details</div>
       <div class="field"><label>Business name</label><input id="s-bn" placeholder="Oli's Lawn Service"></div>
-      <div class="fr2"><div class="field"><label>Your name</label><input id="s-nm" placeholder="Oli Mowat"></div><div class="field"><label>Phone</label><input id="s-ph" placeholder="Your number"></div></div>
+      <div class="fr2">
+        <div class="field"><label>Your name</label><input id="s-nm" placeholder="Oli Mowat"></div>
+        <div class="field"><label>Phone</label><input id="s-ph" placeholder="Your number"></div>
+      </div>
       <div class="field"><label>Complex</label><input id="s-cx" placeholder="e.g. Kearsney Estate"></div>
       <button class="btn bp" onclick="saveSettings()">Save details</button>
     </div>
-    <div class="card">
-      <div class="ct">Security</div>
-      <div class="fr2" style="margin-bottom:10px"><div class="field"><label>New PIN</label><input id="cp1" type="password" inputmode="numeric" maxlength="4" placeholder="····"></div><div class="field"><label>Confirm PIN</label><input id="cp2" type="password" inputmode="numeric" maxlength="4" placeholder="····"></div></div>
+
+    <div class="card"><div class="ct">Change PIN</div>
+      <div class="info-box">The PIN is shared across all your devices. Changing it here updates it everywhere immediately.</div>
+      <div class="fr2">
+        <div class="field"><label>Current PIN</label><input id="cp0" type="password" inputmode="numeric" maxlength="4" placeholder="····"></div>
+        <div class="field"><label>New PIN</label><input id="cp1" type="password" inputmode="numeric" maxlength="4" placeholder="····"></div>
+      </div>
+      <div class="field"><label>Confirm new PIN</label><input id="cp2" type="password" inputmode="numeric" maxlength="4" placeholder="····" style="max-width:200px"></div>
+      <button class="btn bp" onclick="changePin()">Update PIN</button>
+      <div id="pin-change-msg" style="font-size:13px;color:var(--text-muted);margin-top:8px;min-height:18px"></div>
+    </div>
+
+    <div class="card"><div class="ct">Biometrics</div>
+      <div class="info-box">Biometrics (fingerprint / face) unlock the app without typing your PIN. Enrolled per device — set it up on each device separately.</div>
       <div class="br">
-        <button class="btn bp" onclick="changePin()">Change PIN</button>
-        <button class="btn bs" id="bio-setup-btn" onclick="setupBio()" style="display:none">Set up biometrics</button>
+        <button class="btn bs" id="bio-setup-btn" onclick="setupBio()">Set up biometrics</button>
+        <button class="btn bd bsm" onclick="clearBio()">Remove biometrics</button>
       </div>
       <div id="bio-status" style="font-size:12px;color:var(--text-muted);margin-top:8px"></div>
     </div>
-    <div class="card">
-      <div class="ct">Sync status</div>
-      <div id="sync-info" style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Checking sync...</div>
+
+    <div class="card"><div class="ct">Sync</div>
+      <div id="sync-info" style="font-size:13px;color:var(--text-muted);margin-bottom:12px">All data syncs automatically to the cloud.</div>
       <div class="br">
         <button class="btn bp" onclick="syncNow()">&#8635; Sync now</button>
         <button class="btn bs" onclick="exportJSON()">📤 Export backup</button>
@@ -274,169 +277,418 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
       </div>
       <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(event)">
     </div>
-    <div class="card">
-      <div class="ct" style="color:var(--red)">Danger zone</div>
+
+    <div class="card"><div class="ct" style="color:var(--red)">Danger zone</div>
       <button class="btn bd" onclick="clearData()">🗑 Clear all data</button>
     </div>
-    <div style="text-align:center;padding:16px 0"><button class="btn bs" onclick="lockApp()">🔒 Lock app</button></div>
+    <div style="text-align:center;padding:16px 0">
+      <button class="btn bs" onclick="lockApp()">🔒 Lock app</button>
+    </div>
   </div>
 </div>
-
 <div id="snack"></div>
 
 <script>
-// ══ CONFIG ══
-const SB_URL = 'https://gkywgjadboazzzhbaldn.supabase.co';
-const SB_KEY = 'sb_publishable_Iko3QfFRxiCp4EdZR4kq4Q_WgZxr0-t';
-const sb = window.supabase.createClient(SB_URL, SB_KEY);
+const SB_URL='https://gkywgjadboazzzhbaldn.supabase.co';
+const SB_KEY='sb_publishable_Iko3QfFRxiCp4EdZR4kq4Q_WgZxr0-t';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
 
-// ══ STATE ══
-const LSK='lawn_v4', AK='lawn_auth';
+const LSK='lawn_v4';
 let S={clients:[],jobs:[],expenses:[],incomes:[],invoices:[],nextInv:1,settings:{},updatedAt:0};
-let jobFilter='all', pinBuf='', syncTimer=null;
+let cloudPinHash=null;
+let jobFilter='all',pinBuf='',syncTimer=null;
 
-// ══ UTILS ══
+// ── UTILS ──
 function today(){return new Date().toISOString().split('T')[0];}
 function rand(){return Date.now()+''+Math.floor(Math.random()*9999);}
 function fmtDate(d){if(!d)return'—';const[y,m,dy]=d.split('-');return`${parseInt(dy)} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1]} ${y}`;}
 function snack(msg){const el=document.getElementById('snack');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
-function getAuth(){try{return JSON.parse(localStorage.getItem(AK)||'{}');}catch(e){return{};}}
-function setAuth(o){localStorage.setItem(AK,JSON.stringify(o));}
-function lsLoad(){try{const d=localStorage.getItem(LSK);if(d)S=JSON.parse(d);}catch(e){}if(!S.incomes)S.incomes=[];if(!S.settings)S.settings={};if(!S.updatedAt)S.updatedAt=0;}
-function lsSave(){localStorage.setItem(LSK,JSON.stringify(S));}
 const freqLbl={weekly:'Weekly',biweekly:'Every 2 wks',monthly:'Monthly',adhoc:'Ad hoc'};
 
-// ══ SYNC ══
-function setSyncState(state,msg){
-  const dot=document.getElementById('sync-dot');
-  const lbl=document.getElementById('sync-lbl');
-  const info=document.getElementById('sync-info');
-  if(!dot)return;
-  dot.className='sync-dot sync-'+state;
-  lbl.textContent=msg;
-  if(info)info.textContent=state==='ok'?'All data synced to cloud. Changes on any device update automatically.':state==='syncing'?'Syncing...':'Sync failed — working offline. Changes saved locally.';
+async function hashPin(p){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p+'lawn_oli_25'));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-async function pushToCloud(){
-  setSyncState('syncing','Syncing...');
+// ── LOCAL STORAGE ──
+function lsLoad(){try{const d=localStorage.getItem(LSK);if(d)S=JSON.parse(d);}catch(e){}if(!S.incomes)S.incomes=[];if(!S.settings)S.settings={};if(!S.updatedAt)S.updatedAt=0;}
+function lsSave(){localStorage.setItem(LSK,JSON.stringify(S));}
+
+// ── SYNC / SUPABASE ──
+function setSyncUI(state,msg){
+  const dot=document.getElementById('sdot');
+  const lbl=document.getElementById('slbl');
+  const info=document.getElementById('sync-info');
+  if(!dot)return;
+  dot.className='sdot '+({ok:'s-ok',syncing:'s-sy',err:'s-er'}[state]||'s-er');
+  lbl.textContent=msg;
+  if(info)info.textContent=state==='ok'?'All data synced to cloud — changes update automatically across devices.':state==='syncing'?'Syncing...':'Offline — changes saved locally and will sync when reconnected.';
+}
+
+async function pushData(){
+  setSyncUI('syncing','Syncing...');
   try{
     S.updatedAt=Date.now();
     lsSave();
     const{error}=await sb.from('lawn_data').upsert({id:'main',data:S,updated_at:new Date().toISOString()});
-    if(error) throw error;
-    setSyncState('ok','Synced');
-  }catch(e){
-    setSyncState('err','Offline');
-  }
+    if(error)throw error;
+    setSyncUI('ok','Synced');
+  }catch(e){setSyncUI('err','Offline');}
 }
 
-async function pullFromCloud(){
+async function pullData(){
   try{
-    const{data,error}=await sb.from('lawn_data').select('data,updated_at').eq('id','main').single();
+    const{data,error}=await sb.from('lawn_data').select('data,pin_hash,updated_at').eq('id','main').single();
     if(error)throw error;
-    if(data&&data.data){
-      const remote=data.data;
-      const remoteTs=remote.updatedAt||0;
-      const localTs=S.updatedAt||0;
-      if(remoteTs>localTs){
-        S=remote;
-        if(!S.incomes)S.incomes=[];
-        if(!S.settings)S.settings={};
-        lsSave();
-        renderAll();
-        applySettings();
-        snack('Data synced from cloud ✓');
+    if(data){
+      // Store cloud pin hash
+      if(data.pin_hash) cloudPinHash=data.pin_hash;
+      // Merge data if cloud is newer
+      if(data.data){
+        const remote=data.data;
+        const remoteTs=remote.updatedAt||0;
+        const localTs=S.updatedAt||0;
+        if(remoteTs>localTs){
+          S=remote;
+          if(!S.incomes)S.incomes=[];
+          if(!S.settings)S.settings={};
+          lsSave();
+          renderAll();
+          applySettings();
+        }
       }
     }
-    setSyncState('ok','Synced');
+    setSyncUI('ok','Synced');
+    return true;
   }catch(e){
-    setSyncState('err','Offline');
+    setSyncUI('err','Offline');
+    return false;
   }
 }
 
-async function syncNow(){
-  setSyncState('syncing','Syncing...');
-  await pullFromCloud();
-  await pushToCloud();
-}
+async function syncNow(){setSyncUI('syncing','Syncing...');await pullData();await pushData();}
 
 function save(){
   lsSave();
   clearTimeout(syncTimer);
-  syncTimer=setTimeout(pushToCloud,1500);
+  syncTimer=setTimeout(pushData,1500);
 }
 
-// ══ AUTH ══
-async function hashPin(p){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p+'lawn_zn_25'));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+// ── PIN / LOCK ──
+async function initLock(){
+  // Load local data first for speed
+  lsLoad();
+  // Show lock screen, try to load cloud PIN hash
+  document.getElementById('lock-loading').textContent='Connecting...';
+  try{
+    const{data,error}=await sb.from('lawn_data').select('pin_hash').eq('id','main').single();
+    if(!error&&data){
+      if(data.pin_hash){
+        cloudPinHash=data.pin_hash;
+      } else {
+        // No PIN set yet — initialise to '0000'
+        const defaultHash=await hashPin('0000');
+        cloudPinHash=defaultHash;
+        await sb.from('lawn_data').upsert({id:'main',pin_hash:defaultHash,data:S,updated_at:new Date().toISOString()});
+      }
+    }
+  }catch(e){
+    // Offline — try to use locally cached pin hash
+    const cached=localStorage.getItem('lawn_pin');
+    if(cached) cloudPinHash=cached;
+  }
+  document.getElementById('lock-loading').textContent=cloudPinHash?'':'Could not connect — check your internet.';
+  checkBioAvail();
+}
 
-function initLock(){const a=getAuth();if(!a.pinHash){document.getElementById('ls-setup').style.display='flex';}else{document.getElementById('ls-entry').style.display='flex';checkBio();}}
-function sn(){const v=document.getElementById('sp1').value;if(v.length===4)document.getElementById('sp2').focus();}
-function sc(){const p1=document.getElementById('sp1').value,p2=document.getElementById('sp2').value,btn=document.getElementById('ssb'),msg=document.getElementById('sm');if(p2.length===4){if(p1===p2){btn.style.opacity='1';btn.style.pointerEvents='auto';msg.textContent='PINs match ✓';}else{btn.style.opacity='0.4';btn.style.pointerEvents='none';msg.textContent='PINs do not match';}}else{btn.style.opacity='0.4';btn.style.pointerEvents='none';msg.textContent='';}}
-async function savePin(){const pin=document.getElementById('sp1').value;if(pin.length!==4){snack('Enter 4-digit PIN');return;}setAuth({pinHash:await hashPin(pin)});unlock();}
 function pk(k){if(pinBuf.length>=4)return;pinBuf+=k;updDots();if(pinBuf.length===4)setTimeout(chkPin,120);}
 function pdel(){pinBuf=pinBuf.slice(0,-1);updDots();document.getElementById('lock-msg').textContent='';}
 function updDots(){for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.toggle('on',i<pinBuf.length);}
-async function chkPin(){const a=getAuth(),h=await hashPin(pinBuf);if(h===a.pinHash){unlock();}else{document.getElementById('lock-msg').textContent='Wrong PIN, try again';pinBuf='';updDots();setTimeout(()=>document.getElementById('lock-msg').textContent='',2000);}}
 
-async function checkBio(){const a=getAuth();try{if(!window.PublicKeyCredential)return;const av=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();if(av&&a.credId)document.getElementById('bio-btn').classList.add('show');const sb2=document.getElementById('bio-setup-btn');const bs=document.getElementById('bio-status');if(av&&sb2){sb2.style.display='inline-flex';if(bs)bs.textContent=a.credId?'✓ Biometrics enrolled':'Biometrics available — tap to enrol';}}catch(e){}}
-async function setupBio(){try{const cred=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'Lawn Manager',id:location.hostname||'localhost'},user:{id:new TextEncoder().encode('oli'),name:'oli',displayName:'Oli'},pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},timeout:60000}});const a=getAuth();a.credId=Array.from(new Uint8Array(cred.rawId));setAuth(a);snack('Biometrics enrolled ✓');document.getElementById('bio-status').textContent='✓ Biometrics enrolled';}catch(e){if(e.name!=='NotAllowedError')snack('Biometrics failed');}}
-async function bioAuth(){const a=getAuth();if(!a.credId){snack('No biometrics enrolled');return;}try{await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{id:new Uint8Array(a.credId).buffer,type:'public-key'}],userVerification:'required',timeout:60000}});unlock();}catch(e){if(e.name!=='NotAllowedError')snack('Biometric failed');}}
+async function chkPin(){
+  if(!cloudPinHash){snack('Not connected — check internet');pinBuf='';updDots();return;}
+  const h=await hashPin(pinBuf);
+  if(h===cloudPinHash){
+    localStorage.setItem('lawn_pin',cloudPinHash); // cache for offline
+    unlock();
+  } else {
+    document.getElementById('lock-msg').textContent='Wrong PIN — try again';
+    pinBuf='';updDots();
+    setTimeout(()=>document.getElementById('lock-msg').textContent='',2000);
+  }
+}
 
-function unlock(){lsLoad();document.getElementById('lock').classList.add('gone');document.getElementById('app').style.display='block';applySettings();renderAll();checkBio();pinBuf='';updDots();pullFromCloud();}
-function lockApp(){document.getElementById('lock').classList.remove('gone');document.getElementById('ls-entry').style.display='flex';document.getElementById('ls-setup').style.display='none';document.getElementById('app').style.display='none';pinBuf='';updDots();document.getElementById('lock-msg').textContent='';}
-async function changePin(){const p1=document.getElementById('cp1').value,p2=document.getElementById('cp2').value;if(p1.length!==4||p2.length!==4){snack('Enter 4-digit PINs');return;}if(p1!==p2){snack('PINs do not match');return;}const a=getAuth();a.pinHash=await hashPin(p1);setAuth(a);document.getElementById('cp1').value='';document.getElementById('cp2').value='';snack('PIN changed ✓');}
+async function changePin(){
+  const cur=document.getElementById('cp0').value;
+  const p1=document.getElementById('cp1').value;
+  const p2=document.getElementById('cp2').value;
+  const msg=document.getElementById('pin-change-msg');
+  if(cur.length!==4||p1.length!==4||p2.length!==4){msg.textContent='All fields must be 4 digits';return;}
+  if(p1!==p2){msg.textContent='New PINs do not match';return;}
+  const curHash=await hashPin(cur);
+  if(curHash!==cloudPinHash){msg.textContent='Current PIN is incorrect';return;}
+  const newHash=await hashPin(p1);
+  try{
+    const{error}=await sb.from('lawn_data').update({pin_hash:newHash}).eq('id','main');
+    if(error)throw error;
+    cloudPinHash=newHash;
+    localStorage.setItem('lawn_pin',newHash);
+    document.getElementById('cp0').value='';
+    document.getElementById('cp1').value='';
+    document.getElementById('cp2').value='';
+    msg.style.color='var(--green)';
+    msg.textContent='PIN updated on all devices ✓';
+    setTimeout(()=>{msg.textContent='';msg.style.color='var(--text-muted)';},3000);
+  }catch(e){
+    msg.textContent='Failed to update — check your connection';
+  }
+}
 
-// ══ NAV ══
-function showPage(id,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');btn.classList.add('active');if(id==='schedule')popSel('j-cl');if(id==='invoices')popSel('i-cl');if(id==='finance')document.getElementById('e-dt').value=today();if(id==='settings'){applySettingsForm();checkBio();}}
-function tf(id){const el=document.getElementById(id);el.classList.toggle('open');if(id==='jf'&&el.classList.contains('open')){popSel('j-cl');document.getElementById('j-dt').value=today();}if(id==='ivf'&&el.classList.contains('open')){popSel('i-cl');const d=new Date();d.setDate(d.getDate()+14);document.getElementById('i-du').value=d.toISOString().split('T')[0];piInv();}}
-function popSel(id){const sel=document.getElementById(id);sel.innerHTML=S.clients.length?S.clients.map(c=>`<option value="${c.id}">${c.name} — ${c.ad||c.addr}</option>`).join(''):'<option value="">No clients yet</option>';}
+// ── BIOMETRICS (per-device, local) ──
+function getAuth(){try{return JSON.parse(localStorage.getItem('lawn_auth')||'{}');}catch(e){return{};}}
+function setAuthL(o){localStorage.setItem('lawn_auth',JSON.stringify(o));}
 
-// ══ SETTINGS ══
-function applySettings(){const s=S.settings;const t='🌿 '+(s.bname||'Lawn Manager');document.getElementById('app-title').textContent=t;document.title=s.bname||'Lawn Manager';const ln=document.getElementById('lock-app-name');if(ln)ln.textContent=s.bname||'Lawn Manager';}
-function applySettingsForm(){const s=S.settings;const m={bname:'s-bn',name:'s-nm',phone:'s-ph',complex:'s-cx'};Object.keys(m).forEach(k=>{const el=document.getElementById(m[k]);if(el&&s[k])el.value=s[k];});}
-function saveSettings(){S.settings={bname:document.getElementById('s-bn').value.trim(),name:document.getElementById('s-nm').value.trim(),phone:document.getElementById('s-ph').value.trim(),complex:document.getElementById('s-cx').value.trim()};save();applySettings();snack('Settings saved ✓');}
+async function checkBioAvail(){
+  const a=getAuth();
+  try{
+    if(!window.PublicKeyCredential)return;
+    const av=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if(av&&a.credId) document.getElementById('bio-btn').classList.add('show');
+    const bs=document.getElementById('bio-status');
+    if(bs) bs.textContent=a.credId?'✓ Biometrics enrolled on this device':'Not enrolled on this device';
+  }catch(e){}
+}
 
-// ══ CLIENTS ══
-function saveClient(){const name=document.getElementById('c-nm').value.trim(),ad=document.getElementById('c-ad').value.trim();if(!name||!ad){snack('Name and address required');return;}S.clients.push({id:rand(),name,ad,phone:document.getElementById('c-ph').value.trim(),price:parseFloat(document.getElementById('c-pr').value)||0,freq:document.getElementById('c-fr').value,notes:document.getElementById('c-nt').value.trim()});['c-nm','c-ad','c-ph','c-pr','c-nt'].forEach(i=>document.getElementById(i).value='');document.getElementById('c-fr').value='biweekly';save();renderAll();tf('cf');snack('Client added ✓');}
+async function setupBio(){
+  try{
+    const cred=await navigator.credentials.create({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      rp:{name:'Lawn Manager',id:location.hostname||'localhost'},
+      user:{id:new TextEncoder().encode('oli'),name:'oli',displayName:'Oli'},
+      pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
+      timeout:60000
+    }});
+    const a=getAuth();
+    a.credId=Array.from(new Uint8Array(cred.rawId));
+    setAuthL(a);
+    snack('Biometrics enrolled on this device ✓');
+    document.getElementById('bio-status').textContent='✓ Biometrics enrolled on this device';
+    document.getElementById('bio-btn').classList.add('show');
+  }catch(e){if(e.name!=='NotAllowedError')snack('Biometrics setup failed');}
+}
+
+async function bioAuth(){
+  const a=getAuth();
+  if(!a.credId){snack('No biometrics enrolled');return;}
+  try{
+    await navigator.credentials.get({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      allowCredentials:[{id:new Uint8Array(a.credId).buffer,type:'public-key'}],
+      userVerification:'required',timeout:60000
+    }});
+    unlock();
+  }catch(e){if(e.name!=='NotAllowedError')snack('Biometric failed');}
+}
+
+function clearBio(){
+  const a=getAuth();delete a.credId;setAuthL(a);
+  document.getElementById('bio-btn').classList.remove('show');
+  document.getElementById('bio-status').textContent='Biometrics removed from this device';
+  snack('Biometrics removed');
+}
+
+// ── APP UNLOCK / LOCK ──
+function unlock(){
+  document.getElementById('lock').classList.add('gone');
+  document.getElementById('app').style.display='block';
+  pinBuf='';updDots();
+  document.getElementById('lock-msg').textContent='';
+  document.getElementById('lock-loading').textContent='';
+  applySettings();
+  renderAll();
+  pullData(); // refresh data from cloud on unlock
+}
+
+function lockApp(){
+  document.getElementById('lock').classList.remove('gone');
+  document.getElementById('app').style.display='none';
+  pinBuf='';updDots();
+  document.getElementById('lock-msg').textContent='';
+}
+
+// ── NAV ──
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='schedule')popSel('j-cl');
+  if(id==='invoices')popSel('i-cl');
+  if(id==='finance')document.getElementById('e-dt').value=today();
+  if(id==='settings'){applySettingsForm();checkBioAvail();}
+}
+function tf(id){
+  const el=document.getElementById(id);el.classList.toggle('open');
+  if(id==='jf'&&el.classList.contains('open')){popSel('j-cl');document.getElementById('j-dt').value=today();}
+  if(id==='ivf'&&el.classList.contains('open')){popSel('i-cl');const d=new Date();d.setDate(d.getDate()+14);document.getElementById('i-du').value=d.toISOString().split('T')[0];piInv();}
+}
+function popSel(id){
+  const sel=document.getElementById(id);
+  sel.innerHTML=S.clients.length?S.clients.map(c=>`<option value="${c.id}">${c.name} — ${c.ad||''}</option>`).join(''):'<option value="">No clients yet</option>';
+}
+
+// ── SETTINGS ──
+function applySettings(){
+  const s=S.settings;
+  const t='🌿 '+(s.bname||'Lawn Manager');
+  document.getElementById('app-title').textContent=t;
+  document.title=s.bname||'Lawn Manager';
+  const ln=document.getElementById('lock-name');
+  if(ln)ln.textContent=s.bname||'Lawn Manager';
+}
+function applySettingsForm(){
+  const s=S.settings;
+  const m={bname:'s-bn',name:'s-nm',phone:'s-ph',complex:'s-cx'};
+  Object.keys(m).forEach(k=>{const el=document.getElementById(m[k]);if(el&&s[k])el.value=s[k];});
+}
+function saveSettings(){
+  S.settings={bname:document.getElementById('s-bn').value.trim(),name:document.getElementById('s-nm').value.trim(),phone:document.getElementById('s-ph').value.trim(),complex:document.getElementById('s-cx').value.trim()};
+  save();applySettings();snack('Settings saved ✓');
+}
+
+// ── CLIENTS ──
+function saveClient(){
+  const name=document.getElementById('c-nm').value.trim(),ad=document.getElementById('c-ad').value.trim();
+  if(!name||!ad){snack('Name and address required');return;}
+  S.clients.push({id:rand(),name,ad,phone:document.getElementById('c-ph').value.trim(),price:parseFloat(document.getElementById('c-pr').value)||0,freq:document.getElementById('c-fr').value,notes:document.getElementById('c-nt').value.trim()});
+  ['c-nm','c-ad','c-ph','c-pr','c-nt'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('c-fr').value='biweekly';
+  save();renderAll();tf('cf');snack('Client added ✓');
+}
 function delClient(id){if(!confirm('Remove this client?'))return;S.clients=S.clients.filter(c=>c.id!==id);save();renderAll();}
-function renderClients(){const el=document.getElementById('clients-list');if(!S.clients.length){el.innerHTML='<div class="empty"><div class="ei">👤</div>No clients yet</div>';return;}el.innerHTML=S.clients.map(c=>`<div class="li"><div class="li-top"><div><div class="li-name">${c.name}</div><div class="li-sub">${c.ad||c.addr||''}${c.phone?' · '+c.phone:''}</div>${c.notes?`<div class="li-sub">📝 ${c.notes}</div>`:''}</div><div style="text-align:right"><div class="ptag">R${(c.price||0).toFixed(0)}</div><div style="font-size:11px;color:var(--text-muted)">${freqLbl[c.freq]||c.freq}</div></div></div><div class="li-act"><button class="btn bp bsm" onclick="qSched('${c.id}')">+ Schedule</button><button class="btn bd bsm" onclick="delClient('${c.id}')">Remove</button></div></div>`).join('');}
+function renderClients(){
+  const el=document.getElementById('clients-list');
+  if(!S.clients.length){el.innerHTML='<div class="empty"><div class="ei">👤</div>No clients yet</div>';return;}
+  el.innerHTML=S.clients.map(c=>`<div class="li"><div class="li-top"><div><div class="li-name">${c.name}</div><div class="li-sub">${c.ad||''}${c.phone?' · '+c.phone:''}</div>${c.notes?`<div class="li-sub">📝 ${c.notes}</div>`:''}</div><div style="text-align:right"><div class="ptag">R${(c.price||0).toFixed(0)}</div><div style="font-size:11px;color:var(--text-muted)">${freqLbl[c.freq]||c.freq}</div></div></div><div class="li-act"><button class="btn bp bsm" onclick="qSched('${c.id}')">+ Schedule</button><button class="btn bd bsm" onclick="delClient('${c.id}')">Remove</button></div></div>`).join('');
+}
 function qSched(cid){showPage('schedule',document.querySelectorAll('.tab')[2]);setTimeout(()=>{tf('jf');document.getElementById('j-cl').value=cid;},80);}
 
-// ══ JOBS ══
-function saveJob(){const cid=document.getElementById('j-cl').value,dt=document.getElementById('j-dt').value;if(!cid||!dt){snack('Select client and date');return;}const c=S.clients.find(x=>x.id===cid);S.jobs.push({id:rand(),clientId:cid,clientName:c.name,clientAddr:c.ad||c.addr||'',price:c.price||0,date:dt,notes:document.getElementById('j-nt').value.trim(),status:'scheduled',paymentStatus:'unpaid',paidDate:null});document.getElementById('j-nt').value='';save();renderAll();tf('jf');snack('Job scheduled ✓');}
+// ── JOBS ──
+function saveJob(){
+  const cid=document.getElementById('j-cl').value,dt=document.getElementById('j-dt').value;
+  if(!cid||!dt){snack('Select client and date');return;}
+  const c=S.clients.find(x=>x.id===cid);
+  S.jobs.push({id:rand(),clientId:cid,clientName:c.name,clientAddr:c.ad||'',price:c.price||0,date:dt,notes:document.getElementById('j-nt').value.trim(),status:'scheduled',paymentStatus:'unpaid',paidDate:null});
+  document.getElementById('j-nt').value='';
+  save();renderAll();tf('jf');snack('Job scheduled ✓');
+}
 function markDone(id){const j=S.jobs.find(x=>x.id===id);if(!j)return;j.status='done';j.paymentStatus='unpaid';save();renderAll();snack('Job done — awaiting payment');}
 function markPaid(id){const j=S.jobs.find(x=>x.id===id);if(!j)return;j.paymentStatus='paid';j.paidDate=today();S.incomes.push({id:rand(),date:today(),desc:`Payment — ${j.clientName} (${j.clientAddr})`,amount:j.price,jobId:id});save();renderAll();snack('Payment received ✓');}
 function markCanc(id){const j=S.jobs.find(x=>x.id===id);if(j){j.status='cancelled';save();renderAll();}}
 function delJob(id){if(!confirm('Delete this job?'))return;S.jobs=S.jobs.filter(j=>j.id!==id);save();renderAll();}
 function setF(f){jobFilter=f;renderJobs();}
-function renderJobs(){const el=document.getElementById('jobs-list');let jobs=[...S.jobs].sort((a,b)=>a.date>b.date?1:-1);if(jobFilter==='scheduled')jobs=jobs.filter(j=>j.status==='scheduled');else if(jobFilter==='done')jobs=jobs.filter(j=>j.status==='done');else if(jobFilter==='unpaid')jobs=jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid');else if(jobFilter==='paid')jobs=jobs.filter(j=>j.status==='done'&&j.paymentStatus==='paid');if(!jobs.length){el.innerHTML='<div class="empty"><div class="ei">📅</div>No jobs here</div>';return;}el.innerHTML=jobs.map(j=>{const pb=j.status==='done'?(j.paymentStatus==='paid'?'<span class="badge bg-b" style="margin-left:4px">paid</span>':'<span class="badge bb-b" style="margin-left:4px">awaiting payment</span>'):'';return`<div class="li"><div class="li-top"><div><div class="li-name">${j.clientName}</div><div class="li-sub">${j.clientAddr} · ${fmtDate(j.date)}</div>${j.notes?`<div class="li-sub">📝 ${j.notes}</div>`:''}${j.paymentStatus==='paid'&&j.paidDate?`<div class="li-sub">Paid ${fmtDate(j.paidDate)}</div>`:''}</div><div style="text-align:right"><div class="ptag">R${(j.price||0).toFixed(0)}</div><span class="badge ${j.status==='scheduled'?'ba-b':'bgr-b'}">${j.status}</span>${pb}</div></div><div class="li-act">${j.status==='scheduled'?`<button class="btn bsuc bsm" onclick="markDone('${j.id}')">✓ Done</button><button class="btn bs bsm" onclick="markCanc('${j.id}')">Cancel</button>`:''}${j.status==='done'&&j.paymentStatus==='unpaid'?`<button class="btn bp bsm" onclick="markPaid('${j.id}')">💰 Mark paid</button>`:''}<button class="btn bd bsm" onclick="delJob('${j.id}')">Delete</button></div></div>`;}).join('');}
+function renderJobs(){
+  const el=document.getElementById('jobs-list');
+  let jobs=[...S.jobs].sort((a,b)=>a.date>b.date?1:-1);
+  if(jobFilter==='scheduled')jobs=jobs.filter(j=>j.status==='scheduled');
+  else if(jobFilter==='done')jobs=jobs.filter(j=>j.status==='done');
+  else if(jobFilter==='unpaid')jobs=jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid');
+  else if(jobFilter==='paid')jobs=jobs.filter(j=>j.status==='done'&&j.paymentStatus==='paid');
+  if(!jobs.length){el.innerHTML='<div class="empty"><div class="ei">📅</div>No jobs here</div>';return;}
+  el.innerHTML=jobs.map(j=>{
+    const pb=j.status==='done'?(j.paymentStatus==='paid'?'<span class="badge bg-b" style="margin-left:4px">paid</span>':'<span class="badge bb-b" style="margin-left:4px">awaiting payment</span>'):'';
+    return`<div class="li"><div class="li-top"><div><div class="li-name">${j.clientName}</div><div class="li-sub">${j.clientAddr} · ${fmtDate(j.date)}</div>${j.notes?`<div class="li-sub">📝 ${j.notes}</div>`:''}${j.paymentStatus==='paid'&&j.paidDate?`<div class="li-sub">Paid ${fmtDate(j.paidDate)}</div>`:''}</div><div style="text-align:right"><div class="ptag">R${(j.price||0).toFixed(0)}</div><span class="badge ${j.status==='scheduled'?'ba-b':'bgr-b'}">${j.status}</span>${pb}</div></div><div class="li-act">${j.status==='scheduled'?`<button class="btn bsuc bsm" onclick="markDone('${j.id}')">✓ Done</button><button class="btn bs bsm" onclick="markCanc('${j.id}')">Cancel</button>`:''}${j.status==='done'&&j.paymentStatus==='unpaid'?`<button class="btn bp bsm" onclick="markPaid('${j.id}')">💰 Mark paid</button>`:''}<button class="btn bd bsm" onclick="delJob('${j.id}')">Delete</button></div></div>`;
+  }).join('');
+}
 
-// ══ FINANCE ══
-function saveExp(){const dt=document.getElementById('e-dt').value,ds=document.getElementById('e-ds').value.trim(),am=parseFloat(document.getElementById('e-am').value);if(!dt||!ds||!am){snack('Fill in all fields');return;}S.expenses.push({id:rand(),date:dt,desc:ds,amount:am});document.getElementById('e-ds').value='';document.getElementById('e-am').value='';save();renderAll();snack('Expense logged ✓');}
+// ── FINANCE ──
+function saveExp(){
+  const dt=document.getElementById('e-dt').value,ds=document.getElementById('e-ds').value.trim(),am=parseFloat(document.getElementById('e-am').value);
+  if(!dt||!ds||!am){snack('Fill in all fields');return;}
+  S.expenses.push({id:rand(),date:dt,desc:ds,amount:am});
+  document.getElementById('e-ds').value='';document.getElementById('e-am').value='';
+  save();renderAll();snack('Expense logged ✓');
+}
 function delExp(id){S.expenses=S.expenses.filter(e=>e.id!==id);save();renderAll();}
-function renderFinance(){const tIn=S.incomes.reduce((s,x)=>s+x.amount,0),tEx=S.expenses.reduce((s,x)=>s+x.amount,0),pe=S.jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid').reduce((s,j)=>s+(j.price||0),0),ivO=S.invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.amount,0);document.getElementById('f-in').textContent='R'+tIn.toFixed(0);document.getElementById('f-ex').textContent='R'+tEx.toFixed(0);const pr=document.getElementById('f-pr'),p=tIn-tEx;pr.textContent='R'+p.toFixed(0);pr.style.color=p>=0?'var(--green)':'var(--red)';document.getElementById('f-pe').textContent='R'+pe.toFixed(0);document.getElementById('f-iv').textContent='R'+ivO.toFixed(0);const el=document.getElementById('finance-list'),all=[...S.incomes.map(x=>({...x,type:'income'})),...S.expenses.map(x=>({...x,type:'expense'}))].sort((a,b)=>a.date<b.date?1:-1);if(!all.length){el.innerHTML='<div class="empty"><div class="ei">💰</div>No transactions yet</div>';return;}el.innerHTML=all.map(x=>`<div class="li"><div class="li-top"><div><div class="li-name">${x.desc}</div><div class="li-sub">${fmtDate(x.date)}</div></div><div style="text-align:right"><div style="font-size:16px;font-weight:800;color:${x.type==='income'?'var(--green)':'var(--red)'}">${x.type==='income'?'+':'-'}R${x.amount.toFixed(0)}</div><span class="badge ${x.type==='income'?'bg-b':'br-b'}">${x.type}</span></div></div>${x.type==='expense'?`<div class="li-act"><button class="btn bd bsm" onclick="delExp('${x.id}')">Delete</button></div>`:''}</div>`).join('');}
+function renderFinance(){
+  const tIn=S.incomes.reduce((s,x)=>s+x.amount,0),tEx=S.expenses.reduce((s,x)=>s+x.amount,0);
+  const pe=S.jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid').reduce((s,j)=>s+(j.price||0),0);
+  const ivO=S.invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.amount,0);
+  document.getElementById('f-in').textContent='R'+tIn.toFixed(0);
+  document.getElementById('f-ex').textContent='R'+tEx.toFixed(0);
+  const pr=document.getElementById('f-pr'),p=tIn-tEx;pr.textContent='R'+p.toFixed(0);pr.style.color=p>=0?'var(--green)':'var(--red)';
+  document.getElementById('f-pe').textContent='R'+pe.toFixed(0);
+  document.getElementById('f-iv').textContent='R'+ivO.toFixed(0);
+  const el=document.getElementById('finance-list');
+  const all=[...S.incomes.map(x=>({...x,type:'income'})),...S.expenses.map(x=>({...x,type:'expense'}))].sort((a,b)=>a.date<b.date?1:-1);
+  if(!all.length){el.innerHTML='<div class="empty"><div class="ei">💰</div>No transactions yet</div>';return;}
+  el.innerHTML=all.map(x=>`<div class="li"><div class="li-top"><div><div class="li-name">${x.desc}</div><div class="li-sub">${fmtDate(x.date)}</div></div><div style="text-align:right"><div style="font-size:16px;font-weight:800;color:${x.type==='income'?'var(--green)':'var(--red)'}">${x.type==='income'?'+':'-'}R${x.amount.toFixed(0)}</div><span class="badge ${x.type==='income'?'bg-b':'br-b'}">${x.type}</span></div></div>${x.type==='expense'?`<div class="li-act"><button class="btn bd bsm" onclick="delExp('${x.id}')">Delete</button></div>`:''}</div>`).join('');
+}
 
-// ══ INVOICES ══
+// ── INVOICES ──
 function piInv(){const cid=document.getElementById('i-cl').value,c=S.clients.find(x=>x.id===cid);if(c)document.getElementById('i-am').value=c.price||0;}
-function saveInv(){const cid=document.getElementById('i-cl').value,ds=document.getElementById('i-ds').value.trim(),am=parseFloat(document.getElementById('i-am').value),du=document.getElementById('i-du').value;if(!cid||!ds||!am||!du){snack('Fill in all fields');return;}const c=S.clients.find(x=>x.id===cid);S.invoices.push({id:rand(),num:S.nextInv++,clientId:cid,clientName:c.name,clientAddr:c.ad||c.addr||'',desc:ds,amount:am,due:du,status:'unpaid',created:today()});document.getElementById('i-ds').value='';save();renderAll();tf('ivf');snack('Invoice created ✓');}
-function markInvPaid(id){const inv=S.invoices.find(x=>x.id===id);if(!inv)return;inv.status='paid';inv.paidDate=today();S.incomes.push({id:rand(),date:today(),desc:`Invoice #${inv.num} — ${inv.clientName}`,amount:inv.amount,invoiceId:id});save();renderAll();snack('Invoice paid ✓');}
+function saveInv(){
+  const cid=document.getElementById('i-cl').value,ds=document.getElementById('i-ds').value.trim(),am=parseFloat(document.getElementById('i-am').value),du=document.getElementById('i-du').value;
+  if(!cid||!ds||!am||!du){snack('Fill in all fields');return;}
+  const c=S.clients.find(x=>x.id===cid);
+  S.invoices.push({id:rand(),num:S.nextInv++,clientId:cid,clientName:c.name,clientAddr:c.ad||'',desc:ds,amount:am,due:du,status:'unpaid',created:today()});
+  document.getElementById('i-ds').value='';save();renderAll();tf('ivf');snack('Invoice created ✓');
+}
+function markInvPaid(id){
+  const inv=S.invoices.find(x=>x.id===id);if(!inv)return;
+  inv.status='paid';inv.paidDate=today();
+  S.incomes.push({id:rand(),date:today(),desc:`Invoice #${inv.num} — ${inv.clientName}`,amount:inv.amount,invoiceId:id});
+  save();renderAll();snack('Invoice paid ✓');
+}
 function delInv(id){if(!confirm('Delete invoice?'))return;S.invoices=S.invoices.filter(i=>i.id!==id);save();renderAll();}
-function renderInvoices(){const el=document.getElementById('invoices-list');if(!S.invoices.length){el.innerHTML='<div class="empty"><div class="ei">🧾</div>No invoices yet</div>';return;}el.innerHTML=[...S.invoices].sort((a,b)=>a.created<b.created?1:-1).map(i=>`<div class="li"><div class="li-top"><div><div class="li-name">${i.clientName} <span style="color:var(--text-faint);font-weight:400;font-size:12px">#${i.num}</span></div><div class="li-sub">${i.desc}</div><div class="li-sub">Due ${fmtDate(i.due)}${i.paidDate?' · Paid '+fmtDate(i.paidDate):''}</div></div><div style="text-align:right"><div class="ptag">R${i.amount.toFixed(0)}</div><span class="badge ${i.status==='paid'?'bg-b':'ba-b'}">${i.status}</span></div></div><div class="li-act">${i.status==='unpaid'?`<button class="btn bp bsm" onclick="markInvPaid('${i.id}')">💰 Mark paid</button>`:''}<button class="btn bd bsm" onclick="delInv('${i.id}')">Delete</button></div></div>`).join('');}
+function renderInvoices(){
+  const el=document.getElementById('invoices-list');
+  if(!S.invoices.length){el.innerHTML='<div class="empty"><div class="ei">🧾</div>No invoices yet</div>';return;}
+  el.innerHTML=[...S.invoices].sort((a,b)=>a.created<b.created?1:-1).map(i=>`<div class="li"><div class="li-top"><div><div class="li-name">${i.clientName} <span style="color:var(--text-faint);font-weight:400;font-size:12px">#${i.num}</span></div><div class="li-sub">${i.desc}</div><div class="li-sub">Due ${fmtDate(i.due)}${i.paidDate?' · Paid '+fmtDate(i.paidDate):''}</div></div><div style="text-align:right"><div class="ptag">R${i.amount.toFixed(0)}</div><span class="badge ${i.status==='paid'?'bg-b':'ba-b'}">${i.status}</span></div></div><div class="li-act">${i.status==='unpaid'?`<button class="btn bp bsm" onclick="markInvPaid('${i.id}')">💰 Mark paid</button>`:''}<button class="btn bd bsm" onclick="delInv('${i.id}')">Delete</button></div></div>`).join('');
+}
 
-// ══ DASHBOARD ══
-function renderDashboard(){const now=new Date(),ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;document.getElementById('d-cl').textContent=S.clients.length;document.getElementById('d-jb').textContent=S.jobs.filter(j=>j.status==='done'&&j.date&&j.date.startsWith(ym)).length;const moIn=S.incomes.filter(x=>x.date&&x.date.startsWith(ym)).reduce((s,x)=>s+x.amount,0);document.getElementById('d-in').textContent='R'+moIn.toFixed(0);const aw=S.jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid').reduce((s,j)=>s+(j.price||0),0);document.getElementById('d-aw').textContent='R'+aw.toFixed(0);const moEx=S.expenses.filter(e=>e.date&&e.date.startsWith(ym)).reduce((s,e)=>s+e.amount,0);document.getElementById('d-mi').textContent='R'+moIn.toFixed(0);document.getElementById('d-me').textContent='R'+moEx.toFixed(0);const pr=document.getElementById('d-mp'),p=moIn-moEx;pr.textContent='R'+p.toFixed(0);pr.style.color=p>=0?'var(--green)':'var(--red)';const up=S.jobs.filter(j=>j.status==='scheduled').sort((a,b)=>a.date>b.date?1:-1).slice(0,6);document.getElementById('d-up').innerHTML=up.length?up.map(j=>`<div class="upc"><div><div style="font-weight:700">${j.clientName}</div><div style="font-size:12px;color:var(--text-muted)">${j.clientAddr}${j.notes?' · '+j.notes:''}</div></div><div style="text-align:right"><div style="font-size:12px;color:var(--text-muted)">${fmtDate(j.date)}</div><div class="ptag" style="font-size:14px">R${(j.price||0).toFixed(0)}</div></div></div>`).join(''):'<div class="empty"><div class="ei">📋</div>No upcoming jobs</div>';const awJ=S.jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid').sort((a,b)=>a.date<b.date?1:-1);document.getElementById('d-awl').innerHTML=awJ.length?awJ.map(j=>`<div class="upc"><div><div style="font-weight:700">${j.clientName}</div><div style="font-size:12px;color:var(--text-muted)">${j.clientAddr} · done ${fmtDate(j.date)}</div></div><div style="text-align:right"><div class="ptag" style="font-size:14px">R${(j.price||0).toFixed(0)}</div><button class="btn bp bsm" style="margin-top:4px" onclick="markPaid('${j.id}')">💰 Mark paid</button></div></div>`).join(''):'<div class="empty"><div class="ei">✅</div>All paid up</div>';}
+// ── DASHBOARD ──
+function renderDashboard(){
+  const now=new Date(),ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('d-cl').textContent=S.clients.length;
+  document.getElementById('d-jb').textContent=S.jobs.filter(j=>j.status==='done'&&j.date&&j.date.startsWith(ym)).length;
+  const moIn=S.incomes.filter(x=>x.date&&x.date.startsWith(ym)).reduce((s,x)=>s+x.amount,0);
+  document.getElementById('d-in').textContent='R'+moIn.toFixed(0);
+  const aw=S.jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid').reduce((s,j)=>s+(j.price||0),0);
+  document.getElementById('d-aw').textContent='R'+aw.toFixed(0);
+  const moEx=S.expenses.filter(e=>e.date&&e.date.startsWith(ym)).reduce((s,e)=>s+e.amount,0);
+  document.getElementById('d-mi').textContent='R'+moIn.toFixed(0);
+  document.getElementById('d-me').textContent='R'+moEx.toFixed(0);
+  const pr=document.getElementById('d-mp'),p=moIn-moEx;pr.textContent='R'+p.toFixed(0);pr.style.color=p>=0?'var(--green)':'var(--red)';
+  const up=S.jobs.filter(j=>j.status==='scheduled').sort((a,b)=>a.date>b.date?1:-1).slice(0,6);
+  document.getElementById('d-up').innerHTML=up.length?up.map(j=>`<div class="upc"><div><div style="font-weight:700">${j.clientName}</div><div style="font-size:12px;color:var(--text-muted)">${j.clientAddr}${j.notes?' · '+j.notes:''}</div></div><div style="text-align:right"><div style="font-size:12px;color:var(--text-muted)">${fmtDate(j.date)}</div><div class="ptag" style="font-size:14px">R${(j.price||0).toFixed(0)}</div></div></div>`).join(''):'<div class="empty"><div class="ei">📋</div>No upcoming jobs</div>';
+  const awJ=S.jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid').sort((a,b)=>a.date<b.date?1:-1);
+  document.getElementById('d-awl').innerHTML=awJ.length?awJ.map(j=>`<div class="upc"><div><div style="font-weight:700">${j.clientName}</div><div style="font-size:12px;color:var(--text-muted)">${j.clientAddr} · done ${fmtDate(j.date)}</div></div><div style="text-align:right"><div class="ptag" style="font-size:14px">R${(j.price||0).toFixed(0)}</div><button class="btn bp bsm" style="margin-top:4px" onclick="markPaid('${j.id}')">💰 Mark paid</button></div></div>`).join(''):'<div class="empty"><div class="ei">✅</div>All paid up</div>';
+}
 
 function renderAll(){renderDashboard();renderClients();renderJobs();renderFinance();renderInvoices();}
 
-// ══ EXCEL ══
-function dlExcel(){if(typeof XLSX==='undefined'){snack('Excel library loading...');return;}const wb=XLSX.utils.book_new(),tIn=S.incomes.reduce((s,x)=>s+x.amount,0),tEx=S.expenses.reduce((s,x)=>s+x.amount,0),pe=S.jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid').reduce((s,j)=>s+(j.price||0),0);XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Lawn Manager — Summary'],['Generated',new Date().toLocaleString('en-ZA')],['Business',S.settings.bname||''],['Owner',S.settings.name||''],['Phone',S.settings.phone||''],['Complex',S.settings.complex||''],[],['Metric','Value'],['Total clients',S.clients.length],['Jobs completed',S.jobs.filter(j=>j.status==='done').length],['Jobs scheduled',S.jobs.filter(j=>j.status==='scheduled').length],['Total income received',tIn],['Total expenses',tEx],['Net profit',tIn-tEx],['Awaiting payment (unpaid jobs)',pe],['Outstanding invoices',S.invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.amount,0)]]),'Summary');const cl=[['Name','Unit','Phone','Price (R)','Frequency','Notes']];S.clients.forEach(c=>cl.push([c.name,c.ad||c.addr||'',c.phone||'',c.price||0,freqLbl[c.freq]||c.freq,c.notes||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(cl),'Clients');const sc=[['Client','Address','Date','Price (R)','Job Status','Payment Status','Date Paid','Notes']];[...S.jobs].sort((a,b)=>a.date>b.date?1:-1).forEach(j=>sc.push([j.clientName,j.clientAddr,j.date,j.price||0,j.status,j.status==='done'?j.paymentStatus:'—',j.paidDate||'',j.notes||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sc),'Schedule');const fi=[['Date','Type','Description','Amount (R)']];[...S.incomes.map(x=>({date:x.date,type:'Income',desc:x.desc,amount:x.amount})),...S.expenses.map(x=>({date:x.date,type:'Expense',desc:x.desc,amount:x.amount}))].sort((a,b)=>a.date<b.date?1:-1).forEach(x=>fi.push([x.date,x.type,x.desc,x.amount]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(fi),'Finance');const iv=[['Inv #','Client','Description','Amount (R)','Issued','Due','Status','Date Paid']];[...S.invoices].sort((a,b)=>a.num-b.num).forEach(i=>iv.push([i.num,i.clientName,i.desc,i.amount,i.created,i.due,i.status,i.paidDate||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(iv),'Invoices');XLSX.writeFile(wb,`lawn-manager-${today()}.xlsx`);snack('Excel downloaded ✓');}
+// ── EXCEL ──
+function dlExcel(){
+  if(typeof XLSX==='undefined'){snack('Excel library loading...');return;}
+  const wb=XLSX.utils.book_new();
+  const tIn=S.incomes.reduce((s,x)=>s+x.amount,0),tEx=S.expenses.reduce((s,x)=>s+x.amount,0);
+  const pe=S.jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid').reduce((s,j)=>s+(j.price||0),0);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Lawn Manager — Summary'],['Generated',new Date().toLocaleString('en-ZA')],['Business',S.settings.bname||''],['Owner',S.settings.name||''],['Phone',S.settings.phone||''],['Complex',S.settings.complex||''],[],['Metric','Value'],['Total clients',S.clients.length],['Jobs completed',S.jobs.filter(j=>j.status==='done').length],['Jobs scheduled',S.jobs.filter(j=>j.status==='scheduled').length],['Total income received',tIn],['Total expenses',tEx],['Net profit',tIn-tEx],['Awaiting payment',pe],['Outstanding invoices',S.invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.amount,0)]]),'Summary');
+  const cl=[['Name','Unit','Phone','Price (R)','Frequency','Notes']];S.clients.forEach(c=>cl.push([c.name,c.ad||'',c.phone||'',c.price||0,freqLbl[c.freq]||c.freq,c.notes||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(cl),'Clients');
+  const sc=[['Client','Address','Date','Price (R)','Job Status','Payment Status','Date Paid','Notes']];[...S.jobs].sort((a,b)=>a.date>b.date?1:-1).forEach(j=>sc.push([j.clientName,j.clientAddr,j.date,j.price||0,j.status,j.status==='done'?j.paymentStatus:'—',j.paidDate||'',j.notes||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sc),'Schedule');
+  const fi=[['Date','Type','Description','Amount (R)']];[...S.incomes.map(x=>({date:x.date,type:'Income',desc:x.desc,amount:x.amount})),...S.expenses.map(x=>({date:x.date,type:'Expense',desc:x.desc,amount:x.amount}))].sort((a,b)=>a.date<b.date?1:-1).forEach(x=>fi.push([x.date,x.type,x.desc,x.amount]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(fi),'Finance');
+  const iv=[['Inv #','Client','Description','Amount (R)','Issued','Due','Status','Date Paid']];[...S.invoices].sort((a,b)=>a.num-b.num).forEach(i=>iv.push([i.num,i.clientName,i.desc,i.amount,i.created,i.due,i.status,i.paidDate||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(iv),'Invoices');
+  XLSX.writeFile(wb,`lawn-manager-${today()}.xlsx`);snack('Excel downloaded ✓');
+}
 
-// ══ BACKUP ══
+// ── BACKUP ──
 function exportJSON(){const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`lawn-backup-${today()}.json`;a.click();snack('Backup exported ✓');}
 function importJSON(evt){const f=evt.target.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(!confirm('Replace all current data?'))return;S=d;if(!S.incomes)S.incomes=[];if(!S.settings)S.settings={};save();renderAll();applySettings();snack('Data imported ✓');}catch(err){snack('Invalid file');}};r.readAsText(f);evt.target.value='';}
 function clearData(){if(!confirm('Delete ALL data permanently?'))return;S={clients:[],jobs:[],expenses:[],incomes:[],invoices:[],nextInv:1,settings:{},updatedAt:0};save();renderAll();snack('All data cleared');}
 
-// ══ BOOT ══
+// ── BOOT ──
 initLock();
 </script>
 </body>
