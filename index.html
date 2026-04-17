@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" type="image/png" href="favicon.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -9,14 +8,13 @@
 <title>Lawn Manager</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{--green:#1a6b3c;--green-light:#d6efe0;--text:#111;--text-muted:#666;--text-faint:#bbb;--border:#e0e0e0;--bg:#fff;--bg2:#f7f7f7;--bg3:#efefef;--red:#c0392b;--red-bg:#fdecea;--amber:#b45309;--amber-bg:#fef3c7;--blue:#1e40af;--blue-bg:#eff6ff;--radius:12px;--rsm:7px}
 @media(prefers-color-scheme:dark){:root{--green:#4ade80;--text:#f0f0f0;--text-muted:#aaa;--text-faint:#555;--border:#2a2a2a;--bg:#141414;--bg2:#1e1e1e;--bg3:#282828;--red:#f87171;--red-bg:#2d0f0f;--amber:#fbbf24;--amber-bg:#2d1a00;--blue:#93c5fd;--blue-bg:#1e2d4a;--green-light:#052e16}}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:var(--text);background:var(--bg);min-height:100vh}
-
-/* LOCK */
-#lock{position:fixed;inset:0;background:var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:32px 24px;transition:opacity 0.2s}
+#lock{position:fixed;inset:0;background:var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:32px 24px}
 #lock.gone{display:none}
 .l-logo{font-size:52px;margin-bottom:8px}
 .l-title{color:#fff;font-size:22px;font-weight:700;margin-bottom:4px}
@@ -30,23 +28,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 #bio-btn{background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.3);color:#fff;padding:11px 26px;border-radius:30px;font-size:14px;cursor:pointer;display:none;align-items:center;gap:7px;margin-top:4px}
 #bio-btn.show{display:flex}
 #lock-msg{color:rgba(255,255,255,0.75);font-size:13px;margin-top:10px;min-height:18px;text-align:center}
-#lock-loading{color:rgba(255,255,255,0.6);font-size:13px;margin-top:12px;text-align:center}
-
-/* TOPBAR */
+#lock-loading{color:rgba(255,255,255,0.6);font-size:13px;margin-top:10px;text-align:center}
 .topbar{background:var(--green);color:#fff;padding:13px 14px 0;position:sticky;top:0;z-index:100}
-.tb-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
+.tb-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:6px;flex-wrap:wrap}
 .tb-title{font-size:16px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tb-actions{display:flex;gap:6px;flex-shrink:0}
-.tb-btn{background:rgba(255,255,255,0.18);border:none;color:#fff;padding:5px 11px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tb-actions{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap}
+.tb-btn{background:rgba(255,255,255,0.18);border:none;color:#fff;padding:5px 10px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tb-btn:active{opacity:0.7}
 .sdot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
-.s-ok{background:#4ade80}.s-sy{background:#fbbf24;animation:pulse 1s infinite}.s-er{background:#f87171}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+.s-ok{background:#4ade80}.s-sy{background:#fbbf24;animation:blink 1s infinite}.s-er{background:#f87171}
+.gcal-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+.gc-on{background:#4ade80}.gc-off{background:rgba(255,255,255,0.4)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.35}}
 .tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{padding:8px 12px;font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);background:none;border:none;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all 0.15s}
 .tab.active{color:#fff;border-bottom-color:#fff}
-
-/* LAYOUT */
 .page{display:none;padding:14px;max-width:900px;margin:0 auto}
 .page.active{display:block}
 .card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
@@ -88,11 +85,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 #snack{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 22px;border-radius:24px;font-size:13px;opacity:0;pointer-events:none;transition:opacity 0.2s;z-index:1000;white-space:nowrap}
 #snack.show{opacity:1}
 .info-box{background:var(--bg2);border-radius:var(--rsm);padding:10px 13px;font-size:13px;color:var(--text-muted);margin-bottom:12px}
+.gcal-card{border:1px solid var(--border);border-radius:var(--rsm);padding:14px;margin-bottom:12px;display:flex;align-items:center;gap:14px}
+.gcal-icon{font-size:28px;flex-shrink:0}
+.gcal-connected{border-color:var(--green);background:var(--green-light)}
 </style>
 </head>
 <body>
 
-<!-- LOCK -->
 <div id="lock">
   <div id="lock-inner" style="display:flex;flex-direction:column;align-items:center">
     <div class="l-logo">🌿</div>
@@ -115,13 +114,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
   </div>
 </div>
 
-<!-- APP -->
 <div id="app" style="display:none">
   <div class="topbar">
     <div class="tb-row">
       <div class="tb-title" id="app-title">🌿 Lawn Manager</div>
       <div class="tb-actions">
         <button class="tb-btn" onclick="syncNow()"><span class="sdot s-ok" id="sdot"></span><span id="slbl">Synced</span></button>
+        <button class="tb-btn" id="gcal-tb-btn" onclick="gcalConnect()" title="Google Calendar"><span class="gcal-dot gc-off" id="gcal-dot"></span><span id="gcal-lbl">Calendar</span></button>
         <button class="tb-btn" onclick="dlExcel()">📊 Excel</button>
       </div>
     </div>
@@ -160,16 +159,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
     <div class="fw card" id="cf">
       <div class="ct">New client</div>
       <div class="field"><label>Name</label><input id="c-nm" placeholder="e.g. Mrs Smith"></div>
-      <div class="fr2">
-        <div class="field"><label>Unit / address</label><input id="c-ad" placeholder="Unit 12"></div>
-        <div class="field"><label>Phone</label><input id="c-ph" placeholder="082 000 0000"></div>
-      </div>
-      <div class="fr2">
-        <div class="field"><label>Price per mow (R)</label><input id="c-pr" type="number" placeholder="150"></div>
-        <div class="field"><label>Frequency</label>
-          <select id="c-fr"><option value="weekly">Weekly</option><option value="biweekly" selected>Every 2 weeks</option><option value="monthly">Monthly</option><option value="adhoc">Ad hoc</option></select>
-        </div>
-      </div>
+      <div class="fr2"><div class="field"><label>Unit / address</label><input id="c-ad" placeholder="Unit 12"></div><div class="field"><label>Phone</label><input id="c-ph" placeholder="082 000 0000"></div></div>
+      <div class="fr2"><div class="field"><label>Price per mow (R)</label><input id="c-pr" type="number" placeholder="150"></div><div class="field"><label>Frequency</label><select id="c-fr"><option value="weekly">Weekly</option><option value="biweekly" selected>Every 2 weeks</option><option value="monthly">Monthly</option><option value="adhoc">Ad hoc</option></select></div></div>
       <div class="field"><label>Notes</label><input id="c-nt" placeholder="Gate code, dog, etc."></div>
       <div class="br"><button class="btn bp" onclick="saveClient()">Save client</button><button class="btn bs" onclick="tf('cf')">Cancel</button></div>
     </div>
@@ -182,10 +173,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
     <div class="fw card" id="jf">
       <div class="ct">New job</div>
       <div class="field"><label>Client</label><select id="j-cl"></select></div>
-      <div class="fr2">
-        <div class="field"><label>Date</label><input id="j-dt" type="date"></div>
-        <div class="field"><label>Notes</label><input id="j-nt" placeholder="Optional"></div>
-      </div>
+      <div class="fr2"><div class="field"><label>Date</label><input id="j-dt" type="date"></div><div class="field"><label>Notes</label><input id="j-nt" placeholder="Optional"></div></div>
       <div class="br"><button class="btn bp" onclick="saveJob()">Save job</button><button class="btn bs" onclick="tf('jf')">Cancel</button></div>
     </div>
     <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
@@ -200,20 +188,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 
   <!-- FINANCE -->
   <div class="page" id="page-finance" style="padding-top:14px">
-    <div class="mg3">
-      <div class="metric"><div class="ml">Total income received</div><div class="mv" id="f-in">R0</div></div>
-      <div class="metric"><div class="ml">Total expenses</div><div class="mv" id="f-ex" style="color:var(--red)">R0</div></div>
-      <div class="metric"><div class="ml">Net profit</div><div class="mv" id="f-pr">R0</div></div>
-    </div>
-    <div class="mg2">
-      <div class="metric"><div class="ml">Pending (unpaid jobs)</div><div class="mv" id="f-pe" style="color:var(--amber)">R0</div></div>
-      <div class="metric"><div class="ml">Outstanding invoices</div><div class="mv" id="f-iv" style="color:var(--amber)">R0</div></div>
-    </div>
+    <div class="mg3"><div class="metric"><div class="ml">Total income received</div><div class="mv" id="f-in">R0</div></div><div class="metric"><div class="ml">Total expenses</div><div class="mv" id="f-ex" style="color:var(--red)">R0</div></div><div class="metric"><div class="ml">Net profit</div><div class="mv" id="f-pr">R0</div></div></div>
+    <div class="mg2"><div class="metric"><div class="ml">Pending (unpaid jobs)</div><div class="mv" id="f-pe" style="color:var(--amber)">R0</div></div><div class="metric"><div class="ml">Outstanding invoices</div><div class="mv" id="f-iv" style="color:var(--amber)">R0</div></div></div>
     <div class="card"><div class="ct">Log expense</div>
-      <div class="fr2">
-        <div class="field"><label>Date</label><input id="e-dt" type="date"></div>
-        <div class="field"><label>Amount (R)</label><input id="e-am" type="number" placeholder="0"></div>
-      </div>
+      <div class="fr2"><div class="field"><label>Date</label><input id="e-dt" type="date"></div><div class="field"><label>Amount (R)</label><input id="e-am" type="number" placeholder="0"></div></div>
       <div class="field"><label>Description</label><input id="e-ds" placeholder="e.g. Fuel, blade sharpening"></div>
       <button class="btn bp" onclick="saveExp()">Add expense</button>
     </div>
@@ -228,10 +206,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
       <div class="ct">New invoice</div>
       <div class="field"><label>Client</label><select id="i-cl" onchange="piInv()"></select></div>
       <div class="field"><label>Description</label><input id="i-ds" placeholder="e.g. 2x lawn mows April"></div>
-      <div class="fr2">
-        <div class="field"><label>Amount (R)</label><input id="i-am" type="number" placeholder="0"></div>
-        <div class="field"><label>Due date</label><input id="i-du" type="date"></div>
-      </div>
+      <div class="fr2"><div class="field"><label>Amount (R)</label><input id="i-am" type="number" placeholder="0"></div><div class="field"><label>Due date</label><input id="i-du" type="date"></div></div>
       <div class="br"><button class="btn bp" onclick="saveInv()">Create</button><button class="btn bs" onclick="tf('ivf')">Cancel</button></div>
     </div>
     <div id="invoices-list"></div>
@@ -241,35 +216,35 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
   <div class="page" id="page-settings" style="padding-top:14px">
     <div class="card"><div class="ct">Business details</div>
       <div class="field"><label>Business name</label><input id="s-bn" placeholder="Oli's Lawn Service"></div>
-      <div class="fr2">
-        <div class="field"><label>Your name</label><input id="s-nm" placeholder="Oli Mowat"></div>
-        <div class="field"><label>Phone</label><input id="s-ph" placeholder="Your number"></div>
-      </div>
+      <div class="fr2"><div class="field"><label>Your name</label><input id="s-nm" placeholder="Oli Mowat"></div><div class="field"><label>Phone</label><input id="s-ph" placeholder="Your number"></div></div>
       <div class="field"><label>Complex</label><input id="s-cx" placeholder="e.g. Kearsney Estate"></div>
       <button class="btn bp" onclick="saveSettings()">Save details</button>
     </div>
 
+    <div class="card"><div class="ct">Google Calendar sync</div>
+      <div id="gcal-settings-status" class="info-box">Not connected</div>
+      <div class="br">
+        <button class="btn bp" id="gcal-connect-btn" onclick="gcalConnect()">🗓 Connect Google Calendar</button>
+        <button class="btn bd bsm" id="gcal-disconnect-btn" onclick="gcalDisconnect()" style="display:none">Disconnect</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:10px">When connected, jobs sync to your Google Calendar automatically. Marking done or cancelled updates the event.</div>
+    </div>
+
     <div class="card"><div class="ct">Change PIN</div>
       <div class="info-box">The PIN is shared across all your devices. Changing it here updates it everywhere immediately.</div>
-      <div class="fr2">
-        <div class="field"><label>Current PIN</label><input id="cp0" type="password" inputmode="numeric" maxlength="4" placeholder="····"></div>
-        <div class="field"><label>New PIN</label><input id="cp1" type="password" inputmode="numeric" maxlength="4" placeholder="····"></div>
-      </div>
+      <div class="fr2"><div class="field"><label>Current PIN</label><input id="cp0" type="password" inputmode="numeric" maxlength="4" placeholder="····"></div><div class="field"><label>New PIN</label><input id="cp1" type="password" inputmode="numeric" maxlength="4" placeholder="····"></div></div>
       <div class="field"><label>Confirm new PIN</label><input id="cp2" type="password" inputmode="numeric" maxlength="4" placeholder="····" style="max-width:200px"></div>
       <button class="btn bp" onclick="changePin()">Update PIN</button>
-      <div id="pin-change-msg" style="font-size:13px;color:var(--text-muted);margin-top:8px;min-height:18px"></div>
+      <div id="pin-msg" style="font-size:13px;color:var(--text-muted);margin-top:8px;min-height:18px"></div>
     </div>
 
     <div class="card"><div class="ct">Biometrics</div>
-      <div class="info-box">Biometrics (fingerprint / face) unlock the app without typing your PIN. Enrolled per device — set it up on each device separately.</div>
-      <div class="br">
-        <button class="btn bs" id="bio-setup-btn" onclick="setupBio()">Set up biometrics</button>
-        <button class="btn bd bsm" onclick="clearBio()">Remove biometrics</button>
-      </div>
+      <div class="info-box">Enrol fingerprint or face ID on each device separately.</div>
+      <div class="br"><button class="btn bs" onclick="setupBio()">Set up biometrics</button><button class="btn bd bsm" onclick="clearBio()">Remove</button></div>
       <div id="bio-status" style="font-size:12px;color:var(--text-muted);margin-top:8px"></div>
     </div>
 
-    <div class="card"><div class="ct">Sync</div>
+    <div class="card"><div class="ct">Sync &amp; backup</div>
       <div id="sync-info" style="font-size:13px;color:var(--text-muted);margin-bottom:12px">All data syncs automatically to the cloud.</div>
       <div class="br">
         <button class="btn bp" onclick="syncNow()">&#8635; Sync now</button>
@@ -279,238 +254,265 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
       <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(event)">
     </div>
 
-    <div class="card"><div class="ct" style="color:var(--red)">Danger zone</div>
-      <button class="btn bd" onclick="clearData()">🗑 Clear all data</button>
-    </div>
-    <div style="text-align:center;padding:16px 0">
-      <button class="btn bs" onclick="lockApp()">🔒 Lock app</button>
-    </div>
+    <div class="card"><div class="ct" style="color:var(--red)">Danger zone</div><button class="btn bd" onclick="clearData()">🗑 Clear all data</button></div>
+    <div style="text-align:center;padding:16px 0"><button class="btn bs" onclick="lockApp()">🔒 Lock app</button></div>
   </div>
 </div>
 <div id="snack"></div>
 
 <script>
+// ══ CONFIG ══
 const SB_URL='https://gkywgjadboazzzhbaldn.supabase.co';
 const SB_KEY='sb_publishable_Iko3QfFRxiCp4EdZR4kq4Q_WgZxr0-t';
+const GCAL_CLIENT_ID='461294857511-loi9g2uf4ha5jo0v1cfnf89pd212h7op.apps.googleusercontent.com';
+const GCAL_SCOPE='https://www.googleapis.com/auth/calendar.events';
 const sb=window.supabase.createClient(SB_URL,SB_KEY);
 
+// ══ STATE ══
 const LSK='lawn_v4';
 let S={clients:[],jobs:[],expenses:[],incomes:[],invoices:[],nextInv:1,settings:{},updatedAt:0};
-let cloudPinHash=null;
+let cloudPinHash=null,gcalToken=null,gcalCalendarId='primary';
 let jobFilter='all',pinBuf='',syncTimer=null;
 
-// ── UTILS ──
+// ══ UTILS ══
 function today(){return new Date().toISOString().split('T')[0];}
 function rand(){return Date.now()+''+Math.floor(Math.random()*9999);}
 function fmtDate(d){if(!d)return'—';const[y,m,dy]=d.split('-');return`${parseInt(dy)} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1]} ${y}`;}
 function snack(msg){const el=document.getElementById('snack');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
 const freqLbl={weekly:'Weekly',biweekly:'Every 2 wks',monthly:'Monthly',adhoc:'Ad hoc'};
+async function hashPin(p){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p+'lawn_oli_25'));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
 
-async function hashPin(p){
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p+'lawn_oli_25'));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-// ── LOCAL STORAGE ──
+// ══ LOCAL STORAGE ══
 function lsLoad(){try{const d=localStorage.getItem(LSK);if(d)S=JSON.parse(d);}catch(e){}if(!S.incomes)S.incomes=[];if(!S.settings)S.settings={};if(!S.updatedAt)S.updatedAt=0;}
 function lsSave(){localStorage.setItem(LSK,JSON.stringify(S));}
 
-// ── SYNC / SUPABASE ──
+// ══ SUPABASE SYNC ══
 function setSyncUI(state,msg){
-  const dot=document.getElementById('sdot');
-  const lbl=document.getElementById('slbl');
-  const info=document.getElementById('sync-info');
+  const dot=document.getElementById('sdot'),lbl=document.getElementById('slbl'),info=document.getElementById('sync-info');
   if(!dot)return;
   dot.className='sdot '+({ok:'s-ok',syncing:'s-sy',err:'s-er'}[state]||'s-er');
   lbl.textContent=msg;
-  if(info)info.textContent=state==='ok'?'All data synced to cloud — changes update automatically across devices.':state==='syncing'?'Syncing...':'Offline — changes saved locally and will sync when reconnected.';
+  if(info)info.textContent=state==='ok'?'All data synced to cloud — changes update automatically.':state==='syncing'?'Syncing...':'Offline — changes saved locally, will sync when reconnected.';
 }
-
 async function pushData(){
   setSyncUI('syncing','Syncing...');
   try{
-    S.updatedAt=Date.now();
-    lsSave();
+    S.updatedAt=Date.now();lsSave();
     const{error}=await sb.from('lawn_data').upsert({id:'main',data:S,updated_at:new Date().toISOString()});
     if(error)throw error;
     setSyncUI('ok','Synced');
   }catch(e){setSyncUI('err','Offline');}
 }
-
 async function pullData(){
   try{
     const{data,error}=await sb.from('lawn_data').select('data,pin_hash,updated_at').eq('id','main').single();
     if(error)throw error;
     if(data){
-      // Store cloud pin hash
-      if(data.pin_hash) cloudPinHash=data.pin_hash;
-      // Merge data if cloud is newer
+      if(data.pin_hash)cloudPinHash=data.pin_hash;
       if(data.data){
-        const remote=data.data;
-        const remoteTs=remote.updatedAt||0;
-        const localTs=S.updatedAt||0;
-        if(remoteTs>localTs){
-          S=remote;
-          if(!S.incomes)S.incomes=[];
-          if(!S.settings)S.settings={};
-          lsSave();
-          renderAll();
-          applySettings();
-        }
+        const remote=data.data,remoteTs=remote.updatedAt||0,localTs=S.updatedAt||0;
+        if(remoteTs>localTs){S=remote;if(!S.incomes)S.incomes=[];if(!S.settings)S.settings={};lsSave();renderAll();applySettings();}
       }
     }
-    setSyncUI('ok','Synced');
-    return true;
-  }catch(e){
-    setSyncUI('err','Offline');
-    return false;
+    setSyncUI('ok','Synced');return true;
+  }catch(e){setSyncUI('err','Offline');return false;}
+}
+async function syncNow(){setSyncUI('syncing','Syncing...');await pullData();await pushData();}
+function save(){lsSave();clearTimeout(syncTimer);syncTimer=setTimeout(pushData,1500);}
+
+// ══ GOOGLE CALENDAR ══
+function gcalLoadToken(){
+  const t=localStorage.getItem('gcal_token');
+  const exp=localStorage.getItem('gcal_exp');
+  if(t&&exp&&Date.now()<parseInt(exp)){gcalToken=t;updateGcalUI(true);}
+  else{gcalToken=null;updateGcalUI(false);}
+}
+
+function updateGcalUI(connected){
+  const dot=document.getElementById('gcal-dot');
+  const lbl=document.getElementById('gcal-lbl');
+  const connBtn=document.getElementById('gcal-connect-btn');
+  const discBtn=document.getElementById('gcal-disconnect-btn');
+  const status=document.getElementById('gcal-settings-status');
+  if(dot)dot.className='gcal-dot '+(connected?'gc-on':'gc-off');
+  if(lbl)lbl.textContent=connected?'Cal: On':'Calendar';
+  if(connBtn)connBtn.style.display=connected?'none':'inline-flex';
+  if(discBtn)discBtn.style.display=connected?'inline-flex':'none';
+  if(status)status.textContent=connected?'✓ Connected — jobs sync to your Google Calendar automatically.':'Not connected. Click "Connect Google Calendar" to enable sync.';
+  if(status)status.style.color=connected?'var(--green)':'var(--text-muted)';
+}
+
+function gcalConnect(){
+  const client=google.accounts.oauth2.initTokenClient({
+    client_id:GCAL_CLIENT_ID,
+    scope:GCAL_SCOPE,
+    callback:(resp)=>{
+      if(resp.error){snack('Calendar connection failed');return;}
+      gcalToken=resp.access_token;
+      const exp=Date.now()+(resp.expires_in*1000);
+      localStorage.setItem('gcal_token',gcalToken);
+      localStorage.setItem('gcal_exp',''+exp);
+      updateGcalUI(true);
+      snack('Google Calendar connected ✓');
+      gcalSyncAll();
+    }
+  });
+  client.requestAccessToken();
+}
+
+function gcalDisconnect(){
+  gcalToken=null;
+  localStorage.removeItem('gcal_token');
+  localStorage.removeItem('gcal_exp');
+  updateGcalUI(false);
+  snack('Calendar disconnected');
+}
+
+async function gcalRequest(method,path,body){
+  if(!gcalToken)return null;
+  try{
+    const resp=await fetch('https://www.googleapis.com/calendar/v3'+path,{
+      method,
+      headers:{'Authorization':'Bearer '+gcalToken,'Content-Type':'application/json'},
+      body:body?JSON.stringify(body):undefined
+    });
+    if(resp.status===401){gcalDisconnect();snack('Calendar session expired — reconnect in Settings');return null;}
+    if(!resp.ok)return null;
+    if(resp.status===204)return{};
+    return await resp.json();
+  }catch(e){return null;}
+}
+
+function jobToGcalEvent(job){
+  const c=S.clients.find(x=>x.id===job.clientId);
+  const desc=`Lawn mow for ${job.clientName}\nAddress: ${job.clientAddr}\nPrice: R${(job.price||0).toFixed(0)}${job.notes?'\nNotes: '+job.notes:''}`;
+  return{
+    summary:`🌿 Lawn mow — ${job.clientName}`,
+    description:desc,
+    start:{date:job.date},
+    end:{date:job.date},
+    colorId: job.status==='done'?'2': job.status==='cancelled'?'11':'10',
+    status: job.status==='cancelled'?'cancelled':'confirmed'
+  };
+}
+
+async function gcalCreateEvent(job){
+  if(!gcalToken)return;
+  const ev=jobToGcalEvent(job);
+  const result=await gcalRequest('POST',`/calendars/${gcalCalendarId}/events`,ev);
+  if(result&&result.id){
+    job.gcalEventId=result.id;
+    save();
   }
 }
 
-async function syncNow(){setSyncUI('syncing','Syncing...');await pullData();await pushData();}
-
-function save(){
-  lsSave();
-  clearTimeout(syncTimer);
-  syncTimer=setTimeout(pushData,1500);
+async function gcalUpdateEvent(job){
+  if(!gcalToken||!job.gcalEventId)return;
+  const ev=jobToGcalEvent(job);
+  await gcalRequest('PUT',`/calendars/${gcalCalendarId}/events/${job.gcalEventId}`,ev);
 }
 
-// ── PIN / LOCK ──
+async function gcalDeleteEvent(job){
+  if(!gcalToken||!job.gcalEventId)return;
+  await gcalRequest('DELETE',`/calendars/${gcalCalendarId}/events/${job.gcalEventId}`);
+}
+
+async function gcalSyncAll(){
+  if(!gcalToken)return;
+  snack('Syncing all jobs to Calendar...');
+  let count=0;
+  for(const job of S.jobs){
+    if(job.status==='cancelled')continue;
+    if(!job.gcalEventId){
+      await gcalCreateEvent(job);
+      count++;
+    }
+  }
+  lsSave();
+  snack(`Synced ${count} jobs to Google Calendar ✓`);
+}
+
+// ══ PIN / LOCK ══
 async function initLock(){
-  // Load local data first for speed
   lsLoad();
-  // Show lock screen, try to load cloud PIN hash
   document.getElementById('lock-loading').textContent='Connecting...';
   try{
     const{data,error}=await sb.from('lawn_data').select('pin_hash').eq('id','main').single();
     if(!error&&data){
-      if(data.pin_hash){
-        cloudPinHash=data.pin_hash;
-      } else {
-        // No PIN set yet — initialise to '0000'
-        const defaultHash=await hashPin('0000');
-        cloudPinHash=defaultHash;
-        await sb.from('lawn_data').upsert({id:'main',pin_hash:defaultHash,data:S,updated_at:new Date().toISOString()});
-      }
+      if(data.pin_hash){cloudPinHash=data.pin_hash;}
+      else{const h=await hashPin('0000');cloudPinHash=h;await sb.from('lawn_data').upsert({id:'main',pin_hash:h,data:S,updated_at:new Date().toISOString()});}
     }
-  }catch(e){
-    // Offline — try to use locally cached pin hash
-    const cached=localStorage.getItem('lawn_pin');
-    if(cached) cloudPinHash=cached;
-  }
-  document.getElementById('lock-loading').textContent=cloudPinHash?'':'Could not connect — check your internet.';
+  }catch(e){const c=localStorage.getItem('lawn_pin');if(c)cloudPinHash=c;}
+  document.getElementById('lock-loading').textContent=cloudPinHash?'':'Could not connect — check internet.';
   checkBioAvail();
+  gcalLoadToken();
 }
 
 function pk(k){if(pinBuf.length>=4)return;pinBuf+=k;updDots();if(pinBuf.length===4)setTimeout(chkPin,120);}
 function pdel(){pinBuf=pinBuf.slice(0,-1);updDots();document.getElementById('lock-msg').textContent='';}
 function updDots(){for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.toggle('on',i<pinBuf.length);}
-
 async function chkPin(){
-  if(!cloudPinHash){snack('Not connected — check internet');pinBuf='';updDots();return;}
+  if(!cloudPinHash){snack('Not connected');pinBuf='';updDots();return;}
   const h=await hashPin(pinBuf);
-  if(h===cloudPinHash){
-    localStorage.setItem('lawn_pin',cloudPinHash); // cache for offline
-    unlock();
-  } else {
-    document.getElementById('lock-msg').textContent='Wrong PIN — try again';
-    pinBuf='';updDots();
-    setTimeout(()=>document.getElementById('lock-msg').textContent='',2000);
-  }
+  if(h===cloudPinHash){localStorage.setItem('lawn_pin',cloudPinHash);unlock();}
+  else{document.getElementById('lock-msg').textContent='Wrong PIN — try again';pinBuf='';updDots();setTimeout(()=>document.getElementById('lock-msg').textContent='',2000);}
 }
-
 async function changePin(){
-  const cur=document.getElementById('cp0').value;
-  const p1=document.getElementById('cp1').value;
-  const p2=document.getElementById('cp2').value;
-  const msg=document.getElementById('pin-change-msg');
+  const cur=document.getElementById('cp0').value,p1=document.getElementById('cp1').value,p2=document.getElementById('cp2').value;
+  const msg=document.getElementById('pin-msg');
   if(cur.length!==4||p1.length!==4||p2.length!==4){msg.textContent='All fields must be 4 digits';return;}
   if(p1!==p2){msg.textContent='New PINs do not match';return;}
-  const curHash=await hashPin(cur);
-  if(curHash!==cloudPinHash){msg.textContent='Current PIN is incorrect';return;}
+  if(await hashPin(cur)!==cloudPinHash){msg.textContent='Current PIN is incorrect';return;}
   const newHash=await hashPin(p1);
   try{
     const{error}=await sb.from('lawn_data').update({pin_hash:newHash}).eq('id','main');
     if(error)throw error;
-    cloudPinHash=newHash;
-    localStorage.setItem('lawn_pin',newHash);
-    document.getElementById('cp0').value='';
-    document.getElementById('cp1').value='';
-    document.getElementById('cp2').value='';
-    msg.style.color='var(--green)';
-    msg.textContent='PIN updated on all devices ✓';
+    cloudPinHash=newHash;localStorage.setItem('lawn_pin',newHash);
+    document.getElementById('cp0').value='';document.getElementById('cp1').value='';document.getElementById('cp2').value='';
+    msg.style.color='var(--green)';msg.textContent='PIN updated on all devices ✓';
     setTimeout(()=>{msg.textContent='';msg.style.color='var(--text-muted)';},3000);
-  }catch(e){
-    msg.textContent='Failed to update — check your connection';
-  }
+  }catch(e){msg.textContent='Failed — check connection';}
 }
 
-// ── BIOMETRICS (per-device, local) ──
+// ══ BIOMETRICS ══
 function getAuth(){try{return JSON.parse(localStorage.getItem('lawn_auth')||'{}');}catch(e){return{};}}
 function setAuthL(o){localStorage.setItem('lawn_auth',JSON.stringify(o));}
-
 async function checkBioAvail(){
   const a=getAuth();
   try{
     if(!window.PublicKeyCredential)return;
     const av=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-    if(av&&a.credId) document.getElementById('bio-btn').classList.add('show');
+    if(av&&a.credId)document.getElementById('bio-btn').classList.add('show');
     const bs=document.getElementById('bio-status');
-    if(bs) bs.textContent=a.credId?'✓ Biometrics enrolled on this device':'Not enrolled on this device';
+    if(bs)bs.textContent=a.credId?'✓ Biometrics enrolled on this device':'Not enrolled on this device';
   }catch(e){}
 }
-
 async function setupBio(){
   try{
-    const cred=await navigator.credentials.create({publicKey:{
-      challenge:crypto.getRandomValues(new Uint8Array(32)),
-      rp:{name:'Lawn Manager',id:location.hostname||'localhost'},
-      user:{id:new TextEncoder().encode('oli'),name:'oli',displayName:'Oli'},
-      pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
-      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
-      timeout:60000
-    }});
-    const a=getAuth();
-    a.credId=Array.from(new Uint8Array(cred.rawId));
-    setAuthL(a);
-    snack('Biometrics enrolled on this device ✓');
+    const cred=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'Lawn Manager',id:location.hostname||'localhost'},user:{id:new TextEncoder().encode('oli'),name:'oli',displayName:'Oli'},pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},timeout:60000}});
+    const a=getAuth();a.credId=Array.from(new Uint8Array(cred.rawId));setAuthL(a);
+    snack('Biometrics enrolled ✓');
     document.getElementById('bio-status').textContent='✓ Biometrics enrolled on this device';
     document.getElementById('bio-btn').classList.add('show');
   }catch(e){if(e.name!=='NotAllowedError')snack('Biometrics setup failed');}
 }
-
 async function bioAuth(){
-  const a=getAuth();
-  if(!a.credId){snack('No biometrics enrolled');return;}
+  const a=getAuth();if(!a.credId){snack('No biometrics enrolled');return;}
   try{
-    await navigator.credentials.get({publicKey:{
-      challenge:crypto.getRandomValues(new Uint8Array(32)),
-      allowCredentials:[{id:new Uint8Array(a.credId).buffer,type:'public-key'}],
-      userVerification:'required',timeout:60000
-    }});
+    await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{id:new Uint8Array(a.credId).buffer,type:'public-key'}],userVerification:'required',timeout:60000}});
     unlock();
   }catch(e){if(e.name!=='NotAllowedError')snack('Biometric failed');}
 }
+function clearBio(){const a=getAuth();delete a.credId;setAuthL(a);document.getElementById('bio-btn').classList.remove('show');document.getElementById('bio-status').textContent='Biometrics removed';snack('Biometrics removed');}
 
-function clearBio(){
-  const a=getAuth();delete a.credId;setAuthL(a);
-  document.getElementById('bio-btn').classList.remove('show');
-  document.getElementById('bio-status').textContent='Biometrics removed from this device';
-  snack('Biometrics removed');
-}
-
-// ── APP UNLOCK / LOCK ──
 function unlock(){
   document.getElementById('lock').classList.add('gone');
   document.getElementById('app').style.display='block';
   pinBuf='';updDots();
   document.getElementById('lock-msg').textContent='';
   document.getElementById('lock-loading').textContent='';
-  applySettings();
-  renderAll();
-  pullData(); // refresh data from cloud on unlock
+  applySettings();renderAll();pullData();gcalLoadToken();
 }
-
 function lockApp(){
   document.getElementById('lock').classList.remove('gone');
   document.getElementById('app').style.display='none';
@@ -518,12 +520,11 @@ function lockApp(){
   document.getElementById('lock-msg').textContent='';
 }
 
-// ── NAV ──
+// ══ NAV ══
 function showPage(id,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  btn.classList.add('active');
+  document.getElementById('page-'+id).classList.add('active');btn.classList.add('active');
   if(id==='schedule')popSel('j-cl');
   if(id==='invoices')popSel('i-cl');
   if(id==='finance')document.getElementById('e-dt').value=today();
@@ -534,31 +535,14 @@ function tf(id){
   if(id==='jf'&&el.classList.contains('open')){popSel('j-cl');document.getElementById('j-dt').value=today();}
   if(id==='ivf'&&el.classList.contains('open')){popSel('i-cl');const d=new Date();d.setDate(d.getDate()+14);document.getElementById('i-du').value=d.toISOString().split('T')[0];piInv();}
 }
-function popSel(id){
-  const sel=document.getElementById(id);
-  sel.innerHTML=S.clients.length?S.clients.map(c=>`<option value="${c.id}">${c.name} — ${c.ad||''}</option>`).join(''):'<option value="">No clients yet</option>';
-}
+function popSel(id){const sel=document.getElementById(id);sel.innerHTML=S.clients.length?S.clients.map(c=>`<option value="${c.id}">${c.name} — ${c.ad||''}</option>`).join(''):'<option value="">No clients yet</option>';}
 
-// ── SETTINGS ──
-function applySettings(){
-  const s=S.settings;
-  const t='🌿 '+(s.bname||'Lawn Manager');
-  document.getElementById('app-title').textContent=t;
-  document.title=s.bname||'Lawn Manager';
-  const ln=document.getElementById('lock-name');
-  if(ln)ln.textContent=s.bname||'Lawn Manager';
-}
-function applySettingsForm(){
-  const s=S.settings;
-  const m={bname:'s-bn',name:'s-nm',phone:'s-ph',complex:'s-cx'};
-  Object.keys(m).forEach(k=>{const el=document.getElementById(m[k]);if(el&&s[k])el.value=s[k];});
-}
-function saveSettings(){
-  S.settings={bname:document.getElementById('s-bn').value.trim(),name:document.getElementById('s-nm').value.trim(),phone:document.getElementById('s-ph').value.trim(),complex:document.getElementById('s-cx').value.trim()};
-  save();applySettings();snack('Settings saved ✓');
-}
+// ══ SETTINGS ══
+function applySettings(){const s=S.settings;const t='🌿 '+(s.bname||'Lawn Manager');document.getElementById('app-title').textContent=t;document.title=s.bname||'Lawn Manager';const ln=document.getElementById('lock-name');if(ln)ln.textContent=s.bname||'Lawn Manager';}
+function applySettingsForm(){const s=S.settings;const m={bname:'s-bn',name:'s-nm',phone:'s-ph',complex:'s-cx'};Object.keys(m).forEach(k=>{const el=document.getElementById(m[k]);if(el&&s[k])el.value=s[k];});}
+function saveSettings(){S.settings={bname:document.getElementById('s-bn').value.trim(),name:document.getElementById('s-nm').value.trim(),phone:document.getElementById('s-ph').value.trim(),complex:document.getElementById('s-cx').value.trim()};save();applySettings();snack('Settings saved ✓');}
 
-// ── CLIENTS ──
+// ══ CLIENTS ══
 function saveClient(){
   const name=document.getElementById('c-nm').value.trim(),ad=document.getElementById('c-ad').value.trim();
   if(!name||!ad){snack('Name and address required');return;}
@@ -575,19 +559,51 @@ function renderClients(){
 }
 function qSched(cid){showPage('schedule',document.querySelectorAll('.tab')[2]);setTimeout(()=>{tf('jf');document.getElementById('j-cl').value=cid;},80);}
 
-// ── JOBS ──
-function saveJob(){
+// ══ JOBS ══
+async function saveJob(){
   const cid=document.getElementById('j-cl').value,dt=document.getElementById('j-dt').value;
   if(!cid||!dt){snack('Select client and date');return;}
   const c=S.clients.find(x=>x.id===cid);
-  S.jobs.push({id:rand(),clientId:cid,clientName:c.name,clientAddr:c.ad||'',price:c.price||0,date:dt,notes:document.getElementById('j-nt').value.trim(),status:'scheduled',paymentStatus:'unpaid',paidDate:null});
+  const job={id:rand(),clientId:cid,clientName:c.name,clientAddr:c.ad||'',price:c.price||0,date:dt,notes:document.getElementById('j-nt').value.trim(),status:'scheduled',paymentStatus:'unpaid',paidDate:null,gcalEventId:null};
+  S.jobs.push(job);
   document.getElementById('j-nt').value='';
   save();renderAll();tf('jf');snack('Job scheduled ✓');
+  // Sync to Google Calendar
+  if(gcalToken){
+    await gcalCreateEvent(job);
+    snack('Job scheduled + added to Google Calendar ✓');
+  }
 }
-function markDone(id){const j=S.jobs.find(x=>x.id===id);if(!j)return;j.status='done';j.paymentStatus='unpaid';save();renderAll();snack('Job done — awaiting payment');}
-function markPaid(id){const j=S.jobs.find(x=>x.id===id);if(!j)return;j.paymentStatus='paid';j.paidDate=today();S.incomes.push({id:rand(),date:today(),desc:`Payment — ${j.clientName} (${j.clientAddr})`,amount:j.price,jobId:id});save();renderAll();snack('Payment received ✓');}
-function markCanc(id){const j=S.jobs.find(x=>x.id===id);if(j){j.status='cancelled';save();renderAll();}}
-function delJob(id){if(!confirm('Delete this job?'))return;S.jobs=S.jobs.filter(j=>j.id!==id);save();renderAll();}
+
+async function markDone(id){
+  const j=S.jobs.find(x=>x.id===id);if(!j)return;
+  j.status='done';j.paymentStatus='unpaid';
+  save();renderAll();snack('Job done — awaiting payment');
+  if(gcalToken)await gcalUpdateEvent(j);
+}
+
+async function markPaid(id){
+  const j=S.jobs.find(x=>x.id===id);if(!j)return;
+  j.paymentStatus='paid';j.paidDate=today();
+  S.incomes.push({id:rand(),date:today(),desc:`Payment — ${j.clientName} (${j.clientAddr})`,amount:j.price,jobId:id});
+  save();renderAll();snack('Payment received ✓');
+}
+
+async function markCanc(id){
+  const j=S.jobs.find(x=>x.id===id);if(!j)return;
+  j.status='cancelled';
+  save();renderAll();snack('Job cancelled');
+  if(gcalToken)await gcalUpdateEvent(j);
+}
+
+async function delJob(id){
+  if(!confirm('Delete this job?'))return;
+  const j=S.jobs.find(x=>x.id===id);
+  if(j&&gcalToken&&j.gcalEventId)await gcalDeleteEvent(j);
+  S.jobs=S.jobs.filter(j=>j.id!==id);
+  save();renderAll();
+}
+
 function setF(f){jobFilter=f;renderJobs();}
 function renderJobs(){
   const el=document.getElementById('jobs-list');
@@ -599,11 +615,12 @@ function renderJobs(){
   if(!jobs.length){el.innerHTML='<div class="empty"><div class="ei">📅</div>No jobs here</div>';return;}
   el.innerHTML=jobs.map(j=>{
     const pb=j.status==='done'?(j.paymentStatus==='paid'?'<span class="badge bg-b" style="margin-left:4px">paid</span>':'<span class="badge bb-b" style="margin-left:4px">awaiting payment</span>'):'';
-    return`<div class="li"><div class="li-top"><div><div class="li-name">${j.clientName}</div><div class="li-sub">${j.clientAddr} · ${fmtDate(j.date)}</div>${j.notes?`<div class="li-sub">📝 ${j.notes}</div>`:''}${j.paymentStatus==='paid'&&j.paidDate?`<div class="li-sub">Paid ${fmtDate(j.paidDate)}</div>`:''}</div><div style="text-align:right"><div class="ptag">R${(j.price||0).toFixed(0)}</div><span class="badge ${j.status==='scheduled'?'ba-b':'bgr-b'}">${j.status}</span>${pb}</div></div><div class="li-act">${j.status==='scheduled'?`<button class="btn bsuc bsm" onclick="markDone('${j.id}')">✓ Done</button><button class="btn bs bsm" onclick="markCanc('${j.id}')">Cancel</button>`:''}${j.status==='done'&&j.paymentStatus==='unpaid'?`<button class="btn bp bsm" onclick="markPaid('${j.id}')">💰 Mark paid</button>`:''}<button class="btn bd bsm" onclick="delJob('${j.id}')">Delete</button></div></div>`;
+    const gcalBadge=j.gcalEventId?'<span class="badge" style="background:var(--blue-bg);color:var(--blue);margin-left:4px">📅 in calendar</span>':'';
+    return`<div class="li"><div class="li-top"><div><div class="li-name">${j.clientName}</div><div class="li-sub">${j.clientAddr} · ${fmtDate(j.date)}</div>${j.notes?`<div class="li-sub">📝 ${j.notes}</div>`:''}${j.paymentStatus==='paid'&&j.paidDate?`<div class="li-sub">Paid ${fmtDate(j.paidDate)}</div>`:''}</div><div style="text-align:right"><div class="ptag">R${(j.price||0).toFixed(0)}</div><span class="badge ${j.status==='scheduled'?'ba-b':'bgr-b'}">${j.status}</span>${pb}${gcalBadge}</div></div><div class="li-act">${j.status==='scheduled'?`<button class="btn bsuc bsm" onclick="markDone('${j.id}')">✓ Done</button><button class="btn bs bsm" onclick="markCanc('${j.id}')">Cancel</button>`:''}${j.status==='done'&&j.paymentStatus==='unpaid'?`<button class="btn bp bsm" onclick="markPaid('${j.id}')">💰 Mark paid</button>`:''}<button class="btn bd bsm" onclick="delJob('${j.id}')">Delete</button></div></div>`;
   }).join('');
 }
 
-// ── FINANCE ──
+// ══ FINANCE ══
 function saveExp(){
   const dt=document.getElementById('e-dt').value,ds=document.getElementById('e-ds').value.trim(),am=parseFloat(document.getElementById('e-am').value);
   if(!dt||!ds||!am){snack('Fill in all fields');return;}
@@ -627,7 +644,7 @@ function renderFinance(){
   el.innerHTML=all.map(x=>`<div class="li"><div class="li-top"><div><div class="li-name">${x.desc}</div><div class="li-sub">${fmtDate(x.date)}</div></div><div style="text-align:right"><div style="font-size:16px;font-weight:800;color:${x.type==='income'?'var(--green)':'var(--red)'}">${x.type==='income'?'+':'-'}R${x.amount.toFixed(0)}</div><span class="badge ${x.type==='income'?'bg-b':'br-b'}">${x.type}</span></div></div>${x.type==='expense'?`<div class="li-act"><button class="btn bd bsm" onclick="delExp('${x.id}')">Delete</button></div>`:''}</div>`).join('');
 }
 
-// ── INVOICES ──
+// ══ INVOICES ══
 function piInv(){const cid=document.getElementById('i-cl').value,c=S.clients.find(x=>x.id===cid);if(c)document.getElementById('i-am').value=c.price||0;}
 function saveInv(){
   const cid=document.getElementById('i-cl').value,ds=document.getElementById('i-ds').value.trim(),am=parseFloat(document.getElementById('i-am').value),du=document.getElementById('i-du').value;
@@ -649,7 +666,7 @@ function renderInvoices(){
   el.innerHTML=[...S.invoices].sort((a,b)=>a.created<b.created?1:-1).map(i=>`<div class="li"><div class="li-top"><div><div class="li-name">${i.clientName} <span style="color:var(--text-faint);font-weight:400;font-size:12px">#${i.num}</span></div><div class="li-sub">${i.desc}</div><div class="li-sub">Due ${fmtDate(i.due)}${i.paidDate?' · Paid '+fmtDate(i.paidDate):''}</div></div><div style="text-align:right"><div class="ptag">R${i.amount.toFixed(0)}</div><span class="badge ${i.status==='paid'?'bg-b':'ba-b'}">${i.status}</span></div></div><div class="li-act">${i.status==='unpaid'?`<button class="btn bp bsm" onclick="markInvPaid('${i.id}')">💰 Mark paid</button>`:''}<button class="btn bd bsm" onclick="delInv('${i.id}')">Delete</button></div></div>`).join('');
 }
 
-// ── DASHBOARD ──
+// ══ DASHBOARD ══
 function renderDashboard(){
   const now=new Date(),ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   document.getElementById('d-cl').textContent=S.clients.length;
@@ -670,26 +687,26 @@ function renderDashboard(){
 
 function renderAll(){renderDashboard();renderClients();renderJobs();renderFinance();renderInvoices();}
 
-// ── EXCEL ──
+// ══ EXCEL ══
 function dlExcel(){
-  if(typeof XLSX==='undefined'){snack('Excel library loading...');return;}
+  if(typeof XLSX==='undefined'){snack('Loading...');return;}
   const wb=XLSX.utils.book_new();
   const tIn=S.incomes.reduce((s,x)=>s+x.amount,0),tEx=S.expenses.reduce((s,x)=>s+x.amount,0);
   const pe=S.jobs.filter(j=>j.status==='done'&&j.paymentStatus==='unpaid').reduce((s,j)=>s+(j.price||0),0);
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Lawn Manager — Summary'],['Generated',new Date().toLocaleString('en-ZA')],['Business',S.settings.bname||''],['Owner',S.settings.name||''],['Phone',S.settings.phone||''],['Complex',S.settings.complex||''],[],['Metric','Value'],['Total clients',S.clients.length],['Jobs completed',S.jobs.filter(j=>j.status==='done').length],['Jobs scheduled',S.jobs.filter(j=>j.status==='scheduled').length],['Total income received',tIn],['Total expenses',tEx],['Net profit',tIn-tEx],['Awaiting payment',pe],['Outstanding invoices',S.invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.amount,0)]]),'Summary');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Lawn Manager — Summary'],['Generated',new Date().toLocaleString('en-ZA')],['Business',S.settings.bname||''],['Owner',S.settings.name||''],[],['Metric','Value'],['Total clients',S.clients.length],['Jobs completed',S.jobs.filter(j=>j.status==='done').length],['Jobs scheduled',S.jobs.filter(j=>j.status==='scheduled').length],['Total income received',tIn],['Total expenses',tEx],['Net profit',tIn-tEx],['Awaiting payment',pe],['Outstanding invoices',S.invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.amount,0)]]),'Summary');
   const cl=[['Name','Unit','Phone','Price (R)','Frequency','Notes']];S.clients.forEach(c=>cl.push([c.name,c.ad||'',c.phone||'',c.price||0,freqLbl[c.freq]||c.freq,c.notes||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(cl),'Clients');
-  const sc=[['Client','Address','Date','Price (R)','Job Status','Payment Status','Date Paid','Notes']];[...S.jobs].sort((a,b)=>a.date>b.date?1:-1).forEach(j=>sc.push([j.clientName,j.clientAddr,j.date,j.price||0,j.status,j.status==='done'?j.paymentStatus:'—',j.paidDate||'',j.notes||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sc),'Schedule');
+  const sc=[['Client','Address','Date','Price (R)','Job Status','Payment Status','Date Paid','In Calendar','Notes']];[...S.jobs].sort((a,b)=>a.date>b.date?1:-1).forEach(j=>sc.push([j.clientName,j.clientAddr,j.date,j.price||0,j.status,j.status==='done'?j.paymentStatus:'—',j.paidDate||'',j.gcalEventId?'Yes':'No',j.notes||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sc),'Schedule');
   const fi=[['Date','Type','Description','Amount (R)']];[...S.incomes.map(x=>({date:x.date,type:'Income',desc:x.desc,amount:x.amount})),...S.expenses.map(x=>({date:x.date,type:'Expense',desc:x.desc,amount:x.amount}))].sort((a,b)=>a.date<b.date?1:-1).forEach(x=>fi.push([x.date,x.type,x.desc,x.amount]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(fi),'Finance');
   const iv=[['Inv #','Client','Description','Amount (R)','Issued','Due','Status','Date Paid']];[...S.invoices].sort((a,b)=>a.num-b.num).forEach(i=>iv.push([i.num,i.clientName,i.desc,i.amount,i.created,i.due,i.status,i.paidDate||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(iv),'Invoices');
   XLSX.writeFile(wb,`lawn-manager-${today()}.xlsx`);snack('Excel downloaded ✓');
 }
 
-// ── BACKUP ──
+// ══ BACKUP ══
 function exportJSON(){const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`lawn-backup-${today()}.json`;a.click();snack('Backup exported ✓');}
 function importJSON(evt){const f=evt.target.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(!confirm('Replace all current data?'))return;S=d;if(!S.incomes)S.incomes=[];if(!S.settings)S.settings={};save();renderAll();applySettings();snack('Data imported ✓');}catch(err){snack('Invalid file');}};r.readAsText(f);evt.target.value='';}
 function clearData(){if(!confirm('Delete ALL data permanently?'))return;S={clients:[],jobs:[],expenses:[],incomes:[],invoices:[],nextInv:1,settings:{},updatedAt:0};save();renderAll();snack('All data cleared');}
 
-// ── BOOT ──
+// ══ BOOT ══
 initLock();
 </script>
 </body>
