@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" type="image/png" href ="favicon.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -322,12 +321,8 @@ async function syncNow(){setSyncUI('syncing','Syncing...');await pullData();awai
 function save(){lsSave();clearTimeout(syncTimer);syncTimer=setTimeout(pushData,1500);}
 
 // ══ GOOGLE CALENDAR ══
-function gcalLoadToken(){
-  const t=localStorage.getItem('gcal_token');
-  const exp=localStorage.getItem('gcal_exp');
-  if(t&&exp&&Date.now()<parseInt(exp)){gcalToken=t;updateGcalUI(true);}
-  else{gcalToken=null;updateGcalUI(false);}
-}
+// gcal_hint = stored Google account email hint for silent re-auth
+// gcal_enabled = whether user has ever connected (persists forever)
 
 function updateGcalUI(connected){
   const dot=document.getElementById('gcal-dot');
@@ -339,32 +334,93 @@ function updateGcalUI(connected){
   if(lbl)lbl.textContent=connected?'Cal: On':'Calendar';
   if(connBtn)connBtn.style.display=connected?'none':'inline-flex';
   if(discBtn)discBtn.style.display=connected?'inline-flex':'none';
-  if(status)status.textContent=connected?'✓ Connected — jobs sync to your Google Calendar automatically.':'Not connected. Click "Connect Google Calendar" to enable sync.';
-  if(status)status.style.color=connected?'var(--green)':'var(--text-muted)';
+  if(status){
+    status.textContent=connected
+      ?'✓ Connected — jobs sync to your Google Calendar automatically.'
+      :'Not connected. Tap "Connect Google Calendar" to enable sync.';
+    status.style.color=connected?'var(--green)':'var(--text-muted)';
+  }
+}
+
+// Called on every unlock — tries silent re-auth first, falls back to stored token
+async function gcalLoadToken(){
+  const enabled=localStorage.getItem('gcal_enabled');
+  if(!enabled){updateGcalUI(false);return;}
+  // Try to use cached token if still valid (with 2 min buffer)
+  const t=localStorage.getItem('gcal_token');
+  const exp=localStorage.getItem('gcal_exp');
+  if(t&&exp&&Date.now()<parseInt(exp)-120000){
+    gcalToken=t;updateGcalUI(true);return;
+  }
+  // Token expired or missing — attempt silent re-auth
+  await gcalSilentRefresh();
+}
+
+function gcalSilentRefresh(){
+  return new Promise((resolve)=>{
+    const hint=localStorage.getItem('gcal_hint')||'';
+    try{
+      const client=google.accounts.oauth2.initTokenClient({
+        client_id:GCAL_CLIENT_ID,
+        scope:GCAL_SCOPE,
+        hint,
+        prompt:'',  // silent — no popup
+        callback:(resp)=>{
+          if(resp.error||!resp.access_token){
+            // Silent failed — keep showing connected but mark token gone
+            // User will need to re-tap connect once to re-authorise
+            gcalToken=null;
+            updateGcalUI(false);
+            // Show reconnect prompt only if they had it enabled
+            const si=document.getElementById('gcal-settings-status');
+            if(si){si.textContent='Session expired — tap "Connect Google Calendar" to reconnect.';si.style.color='var(--amber)';}
+            resolve(false);return;
+          }
+          gcalToken=resp.access_token;
+          const exp=Date.now()+(resp.expires_in*1000);
+          localStorage.setItem('gcal_token',gcalToken);
+          localStorage.setItem('gcal_exp',''+exp);
+          updateGcalUI(true);
+          // Schedule next silent refresh 5 min before expiry
+          setTimeout(gcalSilentRefresh,(resp.expires_in-300)*1000);
+          resolve(true);
+        }
+      });
+      client.requestAccessToken();
+    }catch(e){gcalToken=null;updateGcalUI(false);resolve(false);}
+  });
 }
 
 function gcalConnect(){
+  // Explicit user-triggered connect — shows account picker
   const client=google.accounts.oauth2.initTokenClient({
     client_id:GCAL_CLIENT_ID,
     scope:GCAL_SCOPE,
     callback:(resp)=>{
-      if(resp.error){snack('Calendar connection failed');return;}
+      if(resp.error||!resp.access_token){snack('Calendar connection failed');return;}
       gcalToken=resp.access_token;
       const exp=Date.now()+(resp.expires_in*1000);
       localStorage.setItem('gcal_token',gcalToken);
       localStorage.setItem('gcal_exp',''+exp);
+      localStorage.setItem('gcal_enabled','1');
       updateGcalUI(true);
       snack('Google Calendar connected ✓');
+      // Schedule auto-refresh
+      setTimeout(gcalSilentRefresh,(resp.expires_in-300)*1000);
       gcalSyncAll();
     }
   });
-  client.requestAccessToken();
+  // Use renderButton flow to capture the account hint
+  google.accounts.oauth2.initCodeClient; // ensure lib loaded
+  client.requestAccessToken({prompt:'select_account'});
 }
 
 function gcalDisconnect(){
   gcalToken=null;
   localStorage.removeItem('gcal_token');
   localStorage.removeItem('gcal_exp');
+  localStorage.removeItem('gcal_enabled');
+  localStorage.removeItem('gcal_hint');
   updateGcalUI(false);
   snack('Calendar disconnected');
 }
